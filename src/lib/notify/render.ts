@@ -20,6 +20,9 @@ export function renderPing(ping: PlannedPing, lang: Lang, vars: PingVars, url: s
 
 export function firstName(fullName: string): string {
   // "EJEMPLO – Juan Pérez" -> "Juan"; "María López" -> "María"
-  const words = fullName.replace(/^EJEMPLO\s*[–-]\s*/i, "").trim().split(/\s+/);
+  const words = fullName
+    .replace(/^EJEMPLO\s*[–-]\s*/i, "")
+    .trim()
+    .split(/\s+/);
   return words[0] || fullName;
 }

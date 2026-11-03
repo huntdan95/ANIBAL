@@ -50,7 +50,7 @@ export function LoginForm({ lang }: { lang: Lang }) {
       <button
         type="submit"
         disabled={pending}
-        className="h-14 w-full rounded-xl bg-navy text-lg font-bold text-white hover:bg-navy-dark disabled:opacity-60"
+        className="h-14 w-full rounded-xl bg-navy text-lg font-bold text-white shadow-sm transition hover:bg-navy-dark active:scale-[0.98] disabled:opacity-60"
       >
         {pending ? t.sending : t.submit}
       </button>

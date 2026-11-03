@@ -47,7 +47,12 @@ export async function notify(
     const urls: Partial<Record<Who, string>> = {};
 
     if (needs("danny")) {
-      const { data: staff } = await admin.from("staff").select("email, language").eq("role", "admin").limit(1).maybeSingle();
+      const { data: staff } = await admin
+        .from("staff")
+        .select("email, language")
+        .eq("role", "admin")
+        .limit(1)
+        .maybeSingle();
       if (staff) {
         const { data: prof } = await admin.from("profiles").select("language").eq("email", staff.email).maybeSingle();
         people.danny = { email: staff.email, lang: pickLang(prof?.language, staff.language) };
@@ -55,7 +60,11 @@ export async function notify(
       }
     }
     if (needs("anibal") && lead.referrer_id) {
-      const { data: prof } = await admin.from("profiles").select("email, language").eq("id", lead.referrer_id).maybeSingle();
+      const { data: prof } = await admin
+        .from("profiles")
+        .select("email, language")
+        .eq("id", lead.referrer_id)
+        .maybeSingle();
       if (prof) {
         people.anibal = { email: prof.email, lang: pickLang(prof.language) };
         urls.anibal = `${site}/leads`;

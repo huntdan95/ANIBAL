@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LeadForm } from "@/components/LeadForm";
+import { PageTitle } from "@/components/ui";
 import { getT } from "@/i18n/server";
 import { requireRole } from "@/lib/auth";
 import { createLead } from "../actions";
@@ -10,20 +11,18 @@ export default async function NewLeadPage() {
   const isAnibal = profile.role === "referrer";
 
   return (
-    <div className="mx-auto max-w-lg">
-      <Link href="/leads" className="text-base font-semibold text-steel">
+    <div className="mx-auto max-w-lg space-y-4">
+      <Link href="/leads" className="inline-flex h-10 items-center font-semibold text-steel hover:text-navy">
         {t.leads.back}
       </Link>
-      <h1 className="mt-2 font-serif text-3xl text-navy">{t.form.addTitle}</h1>
-      <div className="mt-4">
-        <LeadForm
-          lang={lang}
-          action={createLead}
-          initial={{ state: "TN", language: "es", source: isAnibal ? "anibal" : "" }}
-          showReferrerBox={!isAnibal}
-          cancelHref="/leads"
-        />
-      </div>
+      <PageTitle>{t.form.addTitle}</PageTitle>
+      <LeadForm
+        lang={lang}
+        action={createLead}
+        initial={{ state: "TN", language: "es", source: isAnibal ? "anibal" : "" }}
+        showReferrerBox={!isAnibal}
+        cancelHref="/leads"
+      />
     </div>
   );
 }

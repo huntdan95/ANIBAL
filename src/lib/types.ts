@@ -1,14 +1,6 @@
 // Shapes of the main records, matching supabase/migrations.
 
-export const STAGES = [
-  "new",
-  "contacted",
-  "info_sent",
-  "quote_sent",
-  "bound",
-  "not_bought",
-  "not_fit",
-] as const;
+export const STAGES = ["new", "contacted", "info_sent", "quote_sent", "bound", "not_bought", "not_fit"] as const;
 export type Stage = (typeof STAGES)[number];
 
 export const OPEN_STAGES: Stage[] = ["new", "contacted", "info_sent", "quote_sent"];

@@ -14,15 +14,11 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { as as asIn, createUser, freshDatabase, type Q } from "./helpers";
 
 let db: Client;
-const ids = {} as Record<
-  "danny" | "anibal" | "cust1" | "cust2" | "lead1" | "lead2" | "quote1" | "quote2",
-  string
->;
+const ids = {} as Record<"danny" | "anibal" | "cust1" | "cust2" | "lead1" | "lead2" | "quote1" | "quote2", string>;
 
-const as = <T,>(who: string | null, fn: (q: Q) => Promise<T>) => asIn(db, who, fn);
+const as = <T>(who: string | null, fn: (q: Q) => Promise<T>) => asIn(db, who, fn);
 
-const idsOf = (rows: { id?: string; lead_id?: string }[]) =>
-  rows.map((r) => r.id ?? r.lead_id).sort();
+const idsOf = (rows: { id?: string; lead_id?: string }[]) => rows.map((r) => r.id ?? r.lead_id).sort();
 
 beforeAll(async () => {
   db = await freshDatabase("anibal_rls_test");
@@ -56,10 +52,7 @@ beforeAll(async () => {
        values ($1, '{business,workers}', 'Framing', 3000, 50)`,
       [l],
     );
-    await db.query(
-      `insert into storage.objects (bucket_id, name) values ('quotes', $1)`,
-      [`${l}/quote.pdf`],
-    );
+    await db.query(`insert into storage.objects (bucket_id, name) values ('quotes', $1)`, [`${l}/quote.pdf`]);
   }
   const quote = async (l: string) =>
     (
@@ -108,7 +101,9 @@ describe("Danny (admin)", () => {
       const { rows } = await q("select stage, contacted_at from leads where id = $1", [ids.lead1]);
       expect(rows[0].stage).toBe("contacted");
       expect(rows[0].contacted_at).not.toBeNull();
-      const ev = await q("select kind, actor_role from events where lead_id = $1 order by id desc limit 1", [ids.lead1]);
+      const ev = await q("select kind, actor_role from events where lead_id = $1 order by id desc limit 1", [
+        ids.lead1,
+      ]);
       expect(ev.rows[0]).toEqual({ kind: "contacted", actor_role: "admin" });
     });
   });
@@ -143,9 +138,7 @@ describe("Danny (admin)", () => {
 
   it("the activity feed join shows Aníbal names only for his referrals", async () => {
     await as(ids.anibal, async (q) => {
-      const { rows } = await q(
-        "select distinct l.full_name from events e join leads l on l.id = e.lead_id",
-      );
+      const { rows } = await q("select distinct l.full_name from events e join leads l on l.id = e.lead_id");
       expect(rows.map((r) => r.full_name)).toEqual(["Juan Pérez"]);
     });
   });
@@ -208,15 +201,17 @@ describe("Aníbal (referrer)", () => {
   });
 
   it("cannot give himself admin, read the staff list, or fake events", async () => {
-    await expect(as(ids.anibal, (q) => q("update profiles set role = 'admin' where id = $1", [ids.anibal])))
-      .rejects.toThrow(/permission denied/);
+    await expect(
+      as(ids.anibal, (q) => q("update profiles set role = 'admin' where id = $1", [ids.anibal])),
+    ).rejects.toThrow(/permission denied/);
     await expect(as(ids.anibal, (q) => q("select * from staff"))).rejects.toThrow(/permission denied/);
     await expect(as(ids.anibal, (q) => q("select * from invites"))).rejects.toThrow(/permission denied/);
     await expect(
       as(ids.anibal, (q) => q("insert into events (lead_id, kind) values ($1, 'bound')", [ids.lead1])),
     ).rejects.toThrow(/permission denied/);
-    await expect(as(ids.anibal, (q) => q("select public.log_event($1, 'bound')", [ids.lead1])))
-      .rejects.toThrow(/permission denied/);
+    await expect(as(ids.anibal, (q) => q("select public.log_event($1, 'bound')", [ids.lead1]))).rejects.toThrow(
+      /permission denied/,
+    );
   });
 
   it("cannot submit a customer's info or press their quote button", async () => {
@@ -256,8 +251,9 @@ describe("Customer", () => {
     await expect(
       as(ids.cust1, (q) => q("insert into quotes (lead_id, note, pdf_path) values ($1, 'x', 'x')", [ids.lead1])),
     ).rejects.toThrow(/row-level security/);
-    await expect(as(ids.cust1, (q) => q("update profiles set role = 'admin' where id = $1", [ids.cust1])))
-      .rejects.toThrow(/permission denied/);
+    await expect(
+      as(ids.cust1, (q) => q("update profiles set role = 'admin' where id = $1", [ids.cust1])),
+    ).rejects.toThrow(/permission denied/);
   });
 
   it("'Enviar a Danny' saves their info and moves the lead to 'info_sent'", async () => {

@@ -13,12 +13,15 @@ export default async function ConfirmPage({ searchParams }: PageProps<"/auth/con
   const { t } = await getT();
 
   return (
-    <div className="mx-auto max-w-md text-center">
+    <div className="mx-auto mt-6 max-w-md rounded-2xl border border-slate-200/80 bg-white p-6 text-center shadow-sm">
       <h1 className="font-serif text-3xl text-navy">{t.confirm.title}</h1>
       <p className="mt-2 text-lg text-slate-700">{t.confirm.note}</p>
       <form action={confirmLogin} className="mt-6">
         <input type="hidden" name="token_hash" value={token_hash} />
-        <button type="submit" className="h-14 w-full rounded-xl bg-navy text-lg font-bold text-white hover:bg-navy-dark">
+        <button
+          type="submit"
+          className="h-14 w-full rounded-xl bg-navy text-lg font-bold text-white shadow-sm transition hover:bg-navy-dark active:scale-[0.98]"
+        >
           {t.confirm.button}
         </button>
       </form>

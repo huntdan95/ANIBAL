@@ -3,10 +3,7 @@ import { formatDate } from "@/lib/format";
 import { progressSteps, stageRank } from "@/lib/leads/progress";
 import type { Lead } from "@/lib/types";
 
-type ProgressLead = Pick<
-  Lead,
-  "stage" | "contacted_at" | "info_sent_at" | "quote_sent_at" | "bound_at" | "closed_at"
->;
+type ProgressLead = Pick<Lead, "stage" | "contacted_at" | "info_sent_at" | "quote_sent_at" | "bound_at" | "closed_at">;
 
 /**
  * The 4-step bar (Contactado → Info enviada → Cotización enviada → Póliza activa)
@@ -42,7 +39,9 @@ export function ProgressBar({ lead, t, lang }: { lead: ProgressLead; t: Messages
                   className={`h-1 flex-1 ${i === steps.length - 1 ? "invisible" : nextDone ? "bg-navy" : "bg-slate-200"}`}
                 />
               </div>
-              <span className={`mt-1 px-0.5 text-xs font-semibold leading-tight ${s.done ? "text-navy" : "text-slate-500"}`}>
+              <span
+                className={`mt-1 px-0.5 text-xs font-semibold leading-tight ${s.done ? "text-navy" : "text-slate-500"}`}
+              >
                 {label}
               </span>
               {s.date && <span className="text-xs text-slate-500">{formatDate(s.date, lang)}</span>}

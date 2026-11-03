@@ -73,7 +73,10 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 
 ## Code conventions
 - All UI and email text in ONE translation file (`src/i18n/messages.ts`), Spanish default, ES/EN toggle.
-- Mobile-first (Aníbal and most customers use phones): big tap targets, single column.
+- Mobile-first (Aníbal and most customers use phones): big tap targets (h-12+), single column, main action sticky at the bottom on phones.
+- Shared UI pieces: `src/components/ui.tsx` (`buttonClass`, `Card`, `Notice`, `PageTitle`), `SubmitButton` (shows "Guardando…", blocks double taps), `icons.tsx` (inline SVG). Reuse them; don't invent new button styles.
+- Danny's lead page leads with a "Siguiente paso" card (`NextStep.tsx`): one obvious button per stage, a note of who gets emailed (computed from `planPings`), closing tucked in a `<details>`, manual dropdown last.
+- Formatting: Prettier, `printWidth: 120` (`.prettierrc`).
 - IPT brand colors (from the logo, defined in `src/app/globals.css` `@theme`): `navy` #22506B (buttons, headings, links), `steel` #6588A2 (secondary, focus), `gold` #B4AC6F (lines/badges only, too light for text), `cream` #EAE9D1, `paper` page background. Headings use `font-serif`. Logo files: `public/ipt-logo.png`, `public/ipt-shield.png`; app icon `src/app/icon.png`. Emails use the same navy/gold (`src/lib/email/template.ts`).
 - Seed data: 3 fake leads clearly marked "EJEMPLO" (`supabase/seed.sql`; remove with `delete from public.leads where is_example`).
 - Lead list loads all visible leads (RLS-filtered) and filters/searches in memory (`src/lib/leads/filter.ts`, accent-insensitive). Fine for hundreds of leads.

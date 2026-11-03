@@ -23,7 +23,9 @@ export async function freshDatabase(name: string): Promise<Client> {
 
   await db.query(readFileSync(path.join(root, "tests/db/supabase-shim.sql"), "utf8"));
   const migDir = path.join(root, "supabase/migrations");
-  for (const f of readdirSync(migDir).filter((f) => f.endsWith(".sql")).sort()) {
+  for (const f of readdirSync(migDir)
+    .filter((f) => f.endsWith(".sql"))
+    .sort()) {
     await db.query(readFileSync(path.join(migDir, f), "utf8"));
   }
   return db;

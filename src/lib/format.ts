@@ -28,3 +28,18 @@ export function daysSince(iso: string, now = new Date()): number {
 export function fold(s: string): string {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
+
+const dayKey = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(d); // "2026-11-03"
+
+/** "hoy" / "ayer" for recent dates, otherwise "3 nov". Nashville time. */
+export function formatDay(
+  iso: string,
+  lang: Lang,
+  words: { today: string; yesterday: string },
+  now = new Date(),
+): string {
+  const key = dayKey(new Date(iso));
+  if (key === dayKey(now)) return words.today.toLowerCase();
+  if (key === dayKey(new Date(now.getTime() - 24 * 60 * 60 * 1000))) return words.yesterday.toLowerCase();
+  return formatDate(iso, lang);
+}

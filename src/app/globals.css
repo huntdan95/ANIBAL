@@ -22,9 +22,27 @@
   --font-serif: Georgia, "Times New Roman", serif;
 }
 
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-padding-top: 5rem; /* jumping to a field doesn't hide it under the sticky header */
+}
+
 /* Bigger, phone-friendly form controls everywhere. */
 input,
 select,
 textarea {
   font-size: 16px; /* stops iPhone from zooming in on focus */
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-steel) 60%, transparent);
+  outline-offset: 2px;
+}
+
+/* Hide the default triangle on <details> summaries; we draw our own. */
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
 }

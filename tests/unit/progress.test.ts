@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import { progressSteps, reached } from "@/lib/leads/progress";
 import type { Stage } from "@/lib/types";
 
-const lead = (stage: Stage, dates: Partial<Record<"contacted_at" | "info_sent_at" | "quote_sent_at" | "bound_at", string>> = {}) => ({
+const lead = (
+  stage: Stage,
+  dates: Partial<Record<"contacted_at" | "info_sent_at" | "quote_sent_at" | "bound_at", string>> = {},
+) => ({
   stage,
   contacted_at: null,
   info_sent_at: null,
@@ -18,7 +21,11 @@ describe("progress bar", () => {
   });
 
   it("each stage fills the bar up to itself, with dates", () => {
-    const l = lead("quote_sent", { contacted_at: "2026-11-01", info_sent_at: "2026-11-02", quote_sent_at: "2026-11-03" });
+    const l = lead("quote_sent", {
+      contacted_at: "2026-11-01",
+      info_sent_at: "2026-11-02",
+      quote_sent_at: "2026-11-03",
+    });
     expect(progressSteps(l)).toEqual([
       { step: "contacted", done: true, date: "2026-11-01" },
       { step: "info_sent", done: true, date: "2026-11-02" },
@@ -55,5 +62,17 @@ describe("reached (for the scorecard)", () => {
     expect(reached(lead("not_bought", { quote_sent_at: "x" }), "quote_sent")).toBe(true);
     expect(reached(lead("not_bought", { quote_sent_at: "x" }), "bound")).toBe(false);
     expect(reached(lead("new"), "contacted")).toBe(false);
+  });
+});
+
+describe("friendly dates", async () => {
+  const { formatDay } = await import("@/lib/format");
+  const words = { today: "Hoy", yesterday: "Ayer" };
+  const now = new Date("2026-11-03T18:00:00Z"); // noon in Nashville
+  it("says hoy / ayer for recent events, the date otherwise", () => {
+    expect(formatDay("2026-11-03T15:00:00Z", "es", words, now)).toBe("hoy");
+    expect(formatDay("2026-11-02T20:00:00Z", "es", words, now)).toBe("ayer");
+    expect(formatDay("2026-10-30T20:00:00Z", "es", words, now)).toBe("30 oct");
+    expect(formatDay("2026-10-30T20:00:00Z", "en", { today: "Today", yesterday: "Yesterday" }, now)).toBe("Oct 30");
   });
 });

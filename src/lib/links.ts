@@ -17,10 +17,7 @@ export const normalizeEmail = (email: string) => email.trim().toLowerCase();
  * Returns the sign-in account id for an email, creating the account if needed.
  * New accounts become customers unless the email is on the staff list.
  */
-export async function ensureAccount(
-  email: string,
-  meta: { fullName?: string; language?: Lang } = {},
-): Promise<string> {
+export async function ensureAccount(email: string, meta: { fullName?: string; language?: Lang } = {}): Promise<string> {
   const admin = createAdminClient();
   email = normalizeEmail(email);
   const existing = await admin.from("profiles").select("id").eq("email", email).maybeSingle();

@@ -33,11 +33,7 @@ export async function GET(_request: NextRequest, ctx: RouteContext<"/i/[token]">
   });
   if (error) redirect("/login?error=failed");
 
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("language")
-    .eq("id", invite.user_id)
-    .maybeSingle();
+  const { data: profile } = await admin.from("profiles").select("language").eq("id", invite.user_id).maybeSingle();
   if (isLang(profile?.language)) await setLangCookie(profile.language);
 
   redirect("/portal");
