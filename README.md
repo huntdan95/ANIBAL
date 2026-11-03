@@ -4,10 +4,12 @@ A small web app that keeps three people up to date on a referred insurance lead:
 **Danny Hunt** (IPT agent), **Aníbal** (who sends referrals), and **the customer**.
 Everyone signs in with an email link, so there are no passwords. Spanish is the default, with an ES/EN button at the top.
 
-> Status: being built step by step. This README grows with each step.
-> Done so far: database and security rules (step 1), login (step 2), lead list and referral form (step 3),
-> stages, progress bar and activity feed (step 4), email pings (step 5), customer "Mi información" form (step 6),
-> quotes and Danny-only details (step 7), public sign-up page (step 8).
+> **Status:** all 9 parts are built and the automatic tests pass. It has **not yet run against a real
+> Supabase/Resend account**. Your first deploy (Part 3) and the checklist in Part 4 are its first live test.
+
+**What's in it:** magic-link sign-in for Danny, Aníbal and customers · lead list with progress bars · referral form ·
+"next step" buttons · activity feed · email pings · customer page with "Mi información" and quotes ·
+quote PDFs in private storage · public sign-up pages · Danny's scorecard.
 
 ---
 
@@ -101,6 +103,65 @@ You can change your own language with the ES/EN button at the top of the app.
 
 ---
 
+## Part 3: Put it online (Vercel, about 15 minutes)
+
+1. Go to [vercel.com](https://vercel.com) → **Sign Up** → **Continue with GitHub**.
+2. **Add New… → Project** → find **huntdan95/ANIBAL** → **Import**.
+3. Leave the settings as they are (Vercel sees it's a Next.js app). Open **Environment Variables** and add these
+   (names exactly as written; values from Part 1 step 4 and Part 2):
+
+   | Name | Value |
+   |---|---|
+   | `NEXT_PUBLIC_SUPABASE_URL` | your Supabase Project URL |
+   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | the `sb_publishable_…` key |
+   | `SUPABASE_SECRET_KEY` | the `sb_secret_…` key |
+   | `NEXT_PUBLIC_SITE_URL` | leave as `https://anibal.vercel.app` for now; you'll fix it in step 5 |
+   | `RESEND_API_KEY` | the `re_…` key |
+   | `EMAIL_FROM` | `Danny Hunt - IPT <onboarding@resend.dev>` until your domain is verified, then e.g. `Danny Hunt - IPT <danny@iptreferidos.com>` |
+   | `EMAIL_REPLY_TO` | `danny@go-ipt.com` |
+
+4. Click **Deploy** and wait 1–2 minutes. Vercel shows your site's address, something like `https://anibal-xyz.vercel.app`.
+5. Copy that address. In Vercel: **Settings → Environment Variables** → edit `NEXT_PUBLIC_SITE_URL` → paste it
+   (no slash at the end) → **Save**. Then **Deployments** → ⋯ on the newest one → **Redeploy**.
+   (Every email link uses this address, so it must be right.)
+6. In Supabase: **Authentication → URL Configuration** → set **Site URL** to the same address → **Save**.
+
+**Your own domain (optional, later):** Vercel → your project → **Settings → Domains** → add e.g. `iptreferidos.com`
+and follow the DNS instructions. Then update `NEXT_PUBLIC_SITE_URL` and Supabase's Site URL to the new address and redeploy.
+
+Every time new code is pushed to GitHub, Vercel updates the site by itself.
+
+**Cost note:** Vercel's free Hobby plan is meant for personal, non-commercial use. A business tool like this
+technically calls for Vercel Pro ($20/month). The free plan works the same way if you want to try it first.
+
+---
+
+## Part 4: First sign-in and a 10-minute test drive
+
+> ⚠️ Until your sending domain is verified in Resend (Part 2, step 2), emails are only delivered to the address
+> you signed up to Resend with. Sign up to Resend with **danny@go-ipt.com** so you can test as Danny right away.
+> Aníbal and customers start receiving emails once the domain is verified.
+
+1. **You:** open your site → type `danny@go-ipt.com` → **Enviarme el enlace** → open the email → tap the button →
+   tap **Entrar**. You land on the lead list in English. ✅ Login works.
+2. **Example data:** load the 3 EJEMPLO leads (section below) and check the list, the filters, search ("perez"), and the
+   **Activity** and **Scorecard** tabs. (Examples don't count on the scorecard.)
+3. **A test customer:** add a referral with a second email of yours (for example huntdanb@icloud.com) and check
+   **Referred by Aníbal**. The customer gets a welcome email ("Danny Hunt de IPT le ayudará…").
+4. **Be the customer:** open that email in a private/incognito window, tap the button → you see "Hola, …". Fill in
+   "Mi información" → **Enviar a Danny**. As Danny you get "… sent their info", and the lead shows **Info sent**.
+5. **Post a quote:** on the lead, upload any PDF with a note → **Post and notify**. The customer gets
+   "Su cotización está lista". In the customer window, open the PDF and tap **Quiero seguir adelante** → you get an email.
+6. **Bind it:** tap **✓ They bought the policy**. The customer sees "🎉 ¡Su póliza está activa!".
+7. **Aníbal:** once your domain is verified, have Aníbal sign in with anibalperez1000@gmail.com. He should see only his
+   referrals: no Scorecard tab, no prices, no PDFs.
+8. **Public page:** open `/r/radio` on your phone and sign up with another email.
+
+If anything in this list doesn't behave as described, send a screenshot. Errors also show up in Vercel under
+**your project → Logs**.
+
+---
+
 ## Your public sign-up links (radio, newsletter, magazine, events)
 
 Share these so people can sign up on their own. Replace `YOUR-SITE` with your website address (for example `iptreferidos.com`):
@@ -164,6 +225,17 @@ so the code matches.
 
 ---
 
+## Copy the code to your computer (optional)
+
+The app runs on Vercel, so you don't need this to use it. To keep a copy in `C:\Apps\ANIBAL`:
+
+1. Install [GitHub Desktop](https://desktop.github.com) and sign in.
+2. **File → Clone repository** → pick **huntdan95/ANIBAL** → Local path `C:\Apps` → **Clone**.
+   (It creates `C:\Apps\ANIBAL`.)
+3. To get updates later: open GitHub Desktop → **Fetch origin** → **Pull**.
+
+---
+
 ## For developers
 
 ```bash
@@ -184,9 +256,3 @@ Danny, Aníbal and a customer to check that each one sees only what they should:
 TEST_DATABASE_URL=postgres://postgres@127.0.0.1:5432/postgres npm run test:db
 npm run test:unit   # form checks and list filters (no database needed)
 ```
-
----
-
-## Hosting note
-Vercel's free Hobby plan is meant for personal, non-commercial use. A business tool like this
-technically calls for Vercel Pro ($20/month). Deployment steps come in the final build step.

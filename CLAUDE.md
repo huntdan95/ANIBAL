@@ -81,6 +81,15 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 - `src/app/r/[channel]/actions.ts` `signUp`: runs with the admin client (visitor isn't signed in). Honeypot field `website`; names can't contain links/emails; flood guard (`SIGNUP_FLOOD_LIMIT` public sign-ups per 10 min); an open lead with the same email → re-send the customer's link only (`notify(..., { only: ["customer"] })`), no duplicate.
 - New lead has `created_by = null` (feed: "X se inscribió"), then `linkCustomerAccount`, then `notify("lead_added", id, { addedBy: null, source })` → customer welcome + Danny "New sign-up (Radio)".
 
+## Scorecard (`/scorecard`, Danny only; tab shown only to admin)
+- `src/lib/scorecard.ts` `buildScorecard(leads)`: leads with `new_at` in the last 12 months, **examples excluded**. Each step counts as reached via `reached()` (a later step counts the earlier ones). Counts by `source` (null = "Sin dato"), largest first.
+- `ScorecardView.tsx`: one hero number, four meters (navy fill, navy/10 track), ranked single-hue navy bars (≤24px, square at baseline, 4px rounded end, value at tip, hover/focus tooltip) + "Ver como tabla". Single series, so no legend. Navy passes the dataviz validator's contrast check on white.
+
+## Gotchas
+- Staff pages have `loading.tsx`, so `redirect()` from `requireRole` arrives inside a streamed 200 response (meta refresh + `NEXT_REDIRECT`), not as a 307. No page data is sent. Don't "fix" this by removing the loading state.
+- Nothing has run against a live Supabase/Resend yet (the build sandbox couldn't reach them). The first live run is the README "Part 4" test drive. Likely things to verify then: `verifyOtp({ type: "magiclink", token_hash })` (fallback: `type: "email"`), storage `createSignedUploadUrl`/`exists`, and Resend delivery.
+- Known small gaps (fine for v1, don't build unless asked): no rate limit on the login-link form; the lead list filters in memory (fine for hundreds of leads).
+
 ## Pings implementation (`src/lib/notify/`)
 - `plan.ts`: `planPings(event, {referred, addedBy})` decides WHO gets WHICH template (pure, unit-tested). `stageChangeEvent(from, to)` maps Danny's dropdown changes (only contacted/bound/not_bought/not_fit ping).
 - `render.ts`: `renderPing()` builds the email in the recipient's language from `messages.ping.templates`. Customer emails get the 30-day link footer.
@@ -113,7 +122,7 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 6. [x] Customer portal (info form)
 7. [x] Quote posting + customer quotes page (+ Danny-only details)
 8. [x] Public sign-up page
-9. [ ] Scorecard
+9. [x] Scorecard
 
 ## Decisions made with Danny
 - Code lives in GitHub; Danny clones to `C:\Apps\ANIBAL`.

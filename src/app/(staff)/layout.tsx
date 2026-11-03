@@ -10,6 +10,7 @@ export default async function StaffLayout({ children }: LayoutProps<"/">) {
   const items = [
     { href: "/leads", label: t.nav.leads },
     { href: "/activity", label: t.nav.activity },
+    ...(profile?.role === "admin" ? [{ href: "/scorecard", label: t.nav.scorecard }] : []),
   ];
   return (
     <>
