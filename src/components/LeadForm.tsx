@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { messages, type Lang } from "@/i18n/messages";
-import type { LeadFormState } from "@/app/leads/actions";
 import { STATES } from "@/lib/states";
 import { SOURCES } from "@/lib/types";
-import type { ErrorCode } from "@/lib/leads/validate";
+import type { ErrorCode, LeadFormState } from "@/lib/leads/validate";
 
 type Values = Record<string, string>;
 

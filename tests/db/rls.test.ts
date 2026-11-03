@@ -113,6 +113,43 @@ describe("Danny (admin)", () => {
     });
   });
 
+  it("closing records the close date; reopening keeps earlier dates and logs it", async () => {
+    await as(ids.danny, async (q) => {
+      await q("update leads set stage = 'contacted' where id = $1", [ids.lead1]);
+      await q("update leads set stage = 'not_bought' where id = $1", [ids.lead1]);
+      let { rows } = await q("select stage, contacted_at, closed_at from leads where id = $1", [ids.lead1]);
+      expect(rows[0].closed_at).not.toBeNull();
+      expect(rows[0].contacted_at).not.toBeNull();
+
+      await q("update leads set stage = 'new' where id = $1", [ids.lead1]);
+      ({ rows } = await q("select stage, contacted_at, closed_at from leads where id = $1", [ids.lead1]));
+      expect(rows[0]).toMatchObject({ stage: "new", closed_at: null });
+      expect(rows[0].contacted_at).not.toBeNull();
+
+      const ev = await q("select kind from events where lead_id = $1 order by id desc limit 3", [ids.lead1]);
+      expect(ev.rows.map((r) => r.kind)).toEqual(["reopened", "not_bought", "contacted"]);
+    });
+  });
+
+  it("saving the same stage again doesn't add a duplicate event", async () => {
+    await as(ids.danny, async (q) => {
+      await q("update leads set stage = 'contacted' where id = $1", [ids.lead2]);
+      const before = (await q("select count(*)::int as n from events where lead_id = $1", [ids.lead2])).rows[0].n;
+      await q("update leads set stage = 'contacted' where id = $1", [ids.lead2]);
+      const after = (await q("select count(*)::int as n from events where lead_id = $1", [ids.lead2])).rows[0].n;
+      expect(after).toBe(before);
+    });
+  });
+
+  it("the activity feed join shows Aníbal names only for his referrals", async () => {
+    await as(ids.anibal, async (q) => {
+      const { rows } = await q(
+        "select distinct l.full_name from events e join leads l on l.id = e.lead_id",
+      );
+      expect(rows.map((r) => r.full_name)).toEqual(["Juan Pérez"]);
+    });
+  });
+
   it("posting a quote moves the lead to 'quote_sent' automatically", async () => {
     await as(ids.danny, async (q) => {
       await q("update leads set stage = 'contacted' where id = $1", [ids.lead2]);

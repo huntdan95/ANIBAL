@@ -20,6 +20,14 @@ export type LeadInput = {
 export type ErrorCode = "required" | "phone" | "email" | "zip" | "state" | "tooLong";
 export type FieldErrors = Partial<Record<keyof LeadInput, ErrorCode>>;
 
+/** What the referral form's save action sends back when something needs fixing. */
+export type LeadFormState = {
+  status: "idle" | "error";
+  errors: FieldErrors;
+  message?: "fixErrors" | "failed";
+  values?: Record<string, string>;
+};
+
 /** Keeps only digits; drops a leading US "1" from 11-digit numbers. */
 export function normalizePhone(raw: string): string {
   const d = raw.replace(/\D/g, "");

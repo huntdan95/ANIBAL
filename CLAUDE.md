@@ -70,14 +70,17 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 - Seed data: 3 fake leads clearly marked "EJEMPLO" (`supabase/seed.sql`; remove with `delete from public.leads where is_example`).
 - Lead list loads all visible leads (RLS-filtered) and filters/searches in memory (`src/lib/leads/filter.ts`, accent-insensitive). Fine for hundreds of leads.
 - New lead flow (`src/app/leads/actions.ts`): insert AS the user (RLS) → `linkCustomerAccount()` creates/links the customer's sign-in account with the admin client. Staff emails are never linked as customers.
-- `/leads/[id]` is Danny-only (edit form now; stage, private details and quotes get added there later). Aníbal's cards are read-only.
+- `/leads/[id]` is Danny-only: progress bar, stage dropdown (`setStage`), contact info, collapsible edit form. Danny-only details and quotes get added here in step 7. Aníbal's cards are read-only.
+- Staff pages live in the `src/app/(staff)/` route group, whose layout shows the Referidos/Actividad tabs (`StaffNav`).
+- Progress logic is in `src/lib/leads/progress.ts` (`progressSteps`, `reached`) and mirrors `public.stage_rank()`. Stage dates are stamped by DB triggers. Changing a stage never erases dates; moving back hides later steps on the bar.
+- Activity feed: `src/lib/activity.ts` (`listActivity`, `describeEvent`) + `src/components/ActivityList.tsx`. Sentences live in `messages.feed`.
 - Tests: `npm run test:db` runs the RLS + seed tests on a plain Postgres (`TEST_DATABASE_URL`) using `tests/db/supabase-shim.sql` and `tests/db/helpers.ts`. `npm run test:unit` = pure logic.
 
 ## Build order (check in with Danny after each step)
 1. [x] Database + roles + RLS (+ RLS test)
 2. [x] Login (magic link, role routing, 30-day customer invite links). Built; not yet tried against a live Supabase project.
 3. [x] Lead list + referral form (+ seed data in `supabase/seed.sql`, a paste-into-SQL-Editor file, idempotent)
-4. [ ] Stages + progress bar + activity feed
+4. [x] Stages + progress bar + activity feed
 5. [ ] Email pings
 6. [ ] Customer portal (info form)
 7. [ ] Quote posting + customer quotes page

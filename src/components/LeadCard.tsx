@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Messages, Lang } from "@/i18n/messages";
 import { daysSince, formatPhone } from "@/lib/format";
+import { ProgressBar } from "./ProgressBar";
 import type { Lead } from "@/lib/types";
 
 const stageStyle: Record<Lead["stage"], string> = {
@@ -17,6 +18,7 @@ const stageStyle: Record<Lead["stage"], string> = {
 export function LeadCard({
   lead,
   t,
+  lang,
   linkToLead,
   now,
 }: {
@@ -59,6 +61,10 @@ export function LeadCard({
             {t.leads.heardVia}: {t.source[lead.source]}
           </p>
         )}
+      </div>
+
+      <div className="mt-4">
+        <ProgressBar lead={lead} t={t} lang={lang} />
       </div>
 
       {(idleDays >= 2 || lead.is_example) && (

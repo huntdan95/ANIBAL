@@ -3,15 +3,9 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { getReferrerId, linkCustomerAccount } from "@/lib/leads/accounts";
-import { validateLead, type FieldErrors } from "@/lib/leads/validate";
+import { validateLead, type LeadFormState } from "@/lib/leads/validate";
 import { createClient } from "@/lib/supabase/server";
-
-export type LeadFormState = {
-  status: "idle" | "error";
-  errors: FieldErrors;
-  message?: "fixErrors" | "failed";
-  values?: Record<string, string>;
-};
+import { STAGES, type Stage } from "@/lib/types";
 
 const rawValues = (fd: FormData) =>
   Object.fromEntries([...fd.entries()].filter(([, v]) => typeof v === "string")) as Record<string, string>;
@@ -72,4 +66,25 @@ export async function updateLead(id: string, _prev: LeadFormState, fd: FormData)
   }
 
   redirect(`/leads/${id}?saved=1`);
+}
+
+/**
+ * Danny moves a lead to a stage. The database stamps the date the stage was
+ * first reached and writes the activity-feed event.
+ */
+export async function setStage(id: string, fd: FormData) {
+  await requireRole("admin");
+  const stage = String(fd.get("stage") ?? "");
+  if (!(STAGES as readonly string[]).includes(stage)) redirect(`/leads/${id}`);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("leads")
+    .update({ stage: stage as Stage })
+    .eq("id", id);
+  if (error) {
+    console.error("setStage failed:", error);
+    redirect(`/leads/${id}?stage=error`);
+  }
+  redirect(`/leads/${id}?stage=saved`);
 }
