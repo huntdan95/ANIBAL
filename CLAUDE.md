@@ -66,6 +66,7 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 ## Code conventions
 - All UI and email text in ONE translation file (`src/i18n/messages.ts`), Spanish default, ES/EN toggle.
 - Mobile-first (Aníbal and most customers use phones): big tap targets, single column.
+- IPT brand colors (from the logo, defined in `src/app/globals.css` `@theme`): `navy` #22506B (buttons, headings, links), `steel` #6588A2 (secondary, focus), `gold` #B4AC6F (lines/badges only, too light for text), `cream` #EAE9D1, `paper` page background. Headings use `font-serif`. Logo files: `public/ipt-logo.png`, `public/ipt-shield.png`; app icon `src/app/icon.png`. Emails use the same navy/gold (`src/lib/email/template.ts`).
 - Seed data: 3 fake leads clearly marked "EJEMPLO".
 - Tests: `npm run test:db` runs the RLS tests on a plain Postgres (`TEST_DATABASE_URL`) using `tests/db/supabase-shim.sql`.
 

@@ -1,7 +1,25 @@
 @import "tailwindcss";
 
-body {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+/*
+ * IPT brand colors, taken from the Insurance Professionals of Tennessee logo.
+ * Use them as Tailwind classes: bg-navy, text-navy, border-gold, bg-cream, etc.
+ *   navy  #22506B  the "P"; buttons, headings, links
+ *   steel #6588A2  the curve of the "P"; secondary accents, focus rings
+ *   gold  #B4AC6F  the shield; lines and badges only (too light for text)
+ *   cream #EAE9D1  the shield's border; soft highlight backgrounds
+ */
+@theme {
+  --color-navy: #22506b;
+  --color-navy-dark: #173a4f;
+  --color-steel: #6588a2;
+  --color-gold: #b4ac6f;
+  --color-gold-dark: #6e6630; /* readable gold for small text on cream */
+  --color-cream: #eae9d1;
+  --color-cream-light: #f6f5ea;
+  --color-paper: #f8f8f4; /* page background */
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: Georgia, "Times New Roman", serif;
 }
 
 /* Bigger, phone-friendly form controls everywhere. */

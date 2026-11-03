@@ -7,7 +7,7 @@ export default async function LeadsPage() {
   const { t } = await getT();
   return (
     <div>
-      <h1 className="text-2xl font-bold">{t.leads.title}</h1>
+      <h1 className="font-serif text-2xl text-navy">{t.leads.title}</h1>
       <p className="mt-2 text-slate-600">{t.common.comingSoon}</p>
     </div>
   );

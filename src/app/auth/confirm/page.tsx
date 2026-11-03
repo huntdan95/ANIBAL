@@ -14,11 +14,11 @@ export default async function ConfirmPage({ searchParams }: PageProps<"/auth/con
 
   return (
     <div className="mx-auto max-w-md text-center">
-      <h1 className="text-3xl font-bold">{t.confirm.title}</h1>
+      <h1 className="font-serif text-3xl text-navy">{t.confirm.title}</h1>
       <p className="mt-2 text-lg text-slate-700">{t.confirm.note}</p>
       <form action={confirmLogin} className="mt-6">
         <input type="hidden" name="token_hash" value={token_hash} />
-        <button type="submit" className="h-14 w-full rounded-xl bg-blue-800 text-lg font-bold text-white">
+        <button type="submit" className="h-14 w-full rounded-xl bg-navy text-lg font-bold text-white hover:bg-navy-dark">
           {t.confirm.button}
         </button>
       </form>

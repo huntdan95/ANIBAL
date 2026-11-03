@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { getT } from "@/i18n/server";
 import { getProfile } from "@/lib/auth";
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#1e3a8a",
+  themeColor: "#22506b",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
@@ -23,18 +24,19 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
 
   return (
     <html lang={lang}>
-      <body className="min-h-dvh bg-slate-50 text-slate-900 antialiased">
-        <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4">
-            <Link href="/" className="text-lg font-bold text-blue-900">
-              {t.app.name}
+      <body className="min-h-dvh bg-paper font-sans text-slate-900 antialiased">
+        <header className="border-b-[3px] border-gold bg-white">
+          <div className="mx-auto flex h-16 max-w-3xl items-center justify-between gap-3 px-4">
+            <Link href="/" className="flex items-center gap-2.5">
+              <Image src="/ipt-shield.png" alt="IPT" width={34} height={40} priority />
+              <span className="font-serif text-xl tracking-wide text-navy">{t.app.name}</span>
             </Link>
             <div className="flex items-center gap-2">
               <form action={setLanguage}>
                 <input type="hidden" name="lang" value={other} />
                 <button
                   type="submit"
-                  className="h-10 rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700"
+                  className="h-10 rounded-lg border border-steel/50 px-3 text-sm font-semibold text-navy"
                   aria-label={t.lang.switchTo}
                 >
                   {t.lang.switchToShort}
@@ -42,7 +44,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               </form>
               {profile && (
                 <form action={signOut}>
-                  <button type="submit" className="h-10 rounded-lg px-3 text-sm font-semibold text-slate-600">
+                  <button type="submit" className="h-10 rounded-lg px-3 text-sm font-semibold text-steel">
                     {t.nav.logout}
                   </button>
                 </form>
