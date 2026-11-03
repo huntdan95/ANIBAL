@@ -368,6 +368,24 @@ describe("Not signed in", () => {
     await db.query("rollback");
   });
 
+  it("someone who signs up through Aníbal's link shows up on Aníbal's list; other sign-ups don't", async () => {
+    await db.query("begin");
+    const mine = await db.query(
+      "insert into public.leads (full_name, phone, email, source, referrer_id) values ('Rosa', '6155550177', 'rosa@example.com', 'anibal', $1) returning id",
+      [ids.anibal],
+    );
+    await db.query(
+      "insert into public.leads (full_name, phone, email, source) values ('Luis', '6155550178', 'luis@example.com', 'radio')",
+    );
+    await db.query("set local role authenticated");
+    await db.query("select set_config('request.jwt.claims', $1, true)", [
+      JSON.stringify({ sub: ids.anibal, role: "authenticated" }),
+    ]);
+    const { rows } = await db.query("select id, full_name from leads where full_name in ('Rosa', 'Luis')");
+    expect(rows).toEqual([{ id: mine.rows[0].id, full_name: "Rosa" }]);
+    await db.query("rollback");
+  });
+
   it("sees nothing", async () => {
     for (const table of ["leads", "lead_private", "intake", "quotes", "events", "profiles"]) {
       await expect(as(null, (q) => q(`select * from ${table}`))).rejects.toThrow(/permission denied/);

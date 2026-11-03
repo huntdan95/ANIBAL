@@ -59,6 +59,11 @@ export function validateIntake(
   const { input: contact, errors: contactErrors } = validateLead(withEmail);
   const errors: IntakeErrors = { ...contactErrors };
   delete errors.email;
+  // The customer confirms their full address here (the referral itself only needs name, phone, email).
+  if (!contact.street) errors.street = "required";
+  if (!contact.city) errors.city = "required";
+  if (!contact.state) errors.state = "required";
+  if (!contact.zip) errors.zip ??= "required";
 
   const picked = fd.getAll("needs").map(String);
   const needs = NEEDS.filter((n) => picked.includes(n));

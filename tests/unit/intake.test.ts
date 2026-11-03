@@ -75,6 +75,14 @@ describe("Mi información form", () => {
     expect(errors).toEqual({ weeks_per_year: "weeks", roof_year: "year", weekly_payroll: "number" });
   });
 
+  it("the customer still has to give their full address", () => {
+    const { errors } = validateIntake(
+      form({ full_name: "Juan Pérez", phone: "6155550101", state: "TN", language: "es", needs: "home" }),
+      "juan@example.com",
+    );
+    expect(errors).toEqual({ street: "required", city: "required", state: "required", zip: "required" });
+  });
+
   it("still checks the contact info (phone, ZIP)", () => {
     const { errors } = validateIntake(form({ ...contact, phone: "555", zip: "", needs: "home" }), "j@example.com");
     expect(errors).toEqual({ phone: "phone", zip: "required" });

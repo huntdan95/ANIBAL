@@ -12,7 +12,12 @@ export const CHANNELS: Record<string, Source> = {
   magazine: "magazine",
   evento: "event",
   event: "event",
+  // Aníbal's own link: people who sign up here are counted as his referrals.
+  anibal: "anibal",
 };
+
+/** The link Aníbal shares (shown on his lead list). */
+export const ANIBAL_LINK = "anibal";
 
 export const SIGNUP_LINKS = ["radio", "boletin", "revista", "evento"] as const;
 

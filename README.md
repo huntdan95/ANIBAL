@@ -172,6 +172,10 @@ Share these so people can sign up on their own. Replace `YOUR-SITE` with your we
 | Newsletter | `https://YOUR-SITE/r/boletin` | Boletín |
 | Magazine | `https://YOUR-SITE/r/revista` | Revista |
 | Events | `https://YOUR-SITE/r/evento` | Evento |
+| **Aníbal's own link** | `https://YOUR-SITE/r/anibal` | Presentación de Aníbal, **counted as his referral** |
+
+Aníbal doesn't need to remember his link: it's at the top of his referral list, with **WhatsApp**, **Copiar enlace**
+and **Compartir** buttons. When someone signs up through it, you and Aníbal both get an email.
 
 Each person who signs up becomes a **Nuevo** lead tagged with that channel. They get an email with their 30-day link, and you get a "New sign-up" email.
 If the same email signs up again while their lead is still open, they just get their link again (no duplicate).

@@ -15,6 +15,7 @@ describe("public sign-up page", () => {
     expect(channelSource("Revista")).toBe("magazine");
     expect(channelSource("evento")).toBe("event");
     expect(channelSource("event")).toBe("event");
+    expect(channelSource("anibal")).toBe("anibal"); // Aníbal's own link
     expect(channelSource("tiktok")).toBeNull();
   });
 

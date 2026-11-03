@@ -22,6 +22,14 @@ describe("who gets which ping", () => {
     expect(who("lead_added", false, null)).toEqual(["customer:welcome", "danny:newSignup"]);
   });
 
+  it("sign-up through Aníbal's own link → customer welcome + Danny + Aníbal", () => {
+    expect(who("lead_added", true, null)).toEqual([
+      "customer:welcome",
+      "danny:newSignupAnibal",
+      "anibal:signupViaLink",
+    ]);
+  });
+
   it("Danny marks Contacted → Aníbal", () => {
     expect(who("contacted", true)).toEqual(["anibal:contacted"]);
     expect(who("contacted", false)).toEqual([]);

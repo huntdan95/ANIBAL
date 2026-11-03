@@ -40,7 +40,9 @@ export function planPings(event: PingEvent, ctx: PlanContext): PlannedPing[] {
         toCustomer("welcome", "sendInfo"),
         ...(ctx.addedBy === "referrer" ? [toDanny("newReferral")] : []),
         ...(ctx.addedBy === "admin" ? anibal("addedByDanny") : []),
-        ...(ctx.addedBy == null ? [toDanny("newSignup")] : []),
+        // Public sign-up page: through Aníbal's own link, both Danny and Aníbal hear about it.
+        ...(ctx.addedBy == null && ctx.referred ? [toDanny("newSignupAnibal"), toAnibal("signupViaLink")] : []),
+        ...(ctx.addedBy == null && !ctx.referred ? [toDanny("newSignup")] : []),
       ];
     case "contacted":
       return anibal("contacted");

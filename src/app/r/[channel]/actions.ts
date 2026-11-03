@@ -1,7 +1,7 @@
 "use server";
 
 import { after } from "next/server";
-import { linkCustomerAccount } from "@/lib/leads/accounts";
+import { getReferrerId, linkCustomerAccount } from "@/lib/leads/accounts";
 import { notify } from "@/lib/notify";
 import { channelSource, SIGNUP_FLOOD_LIMIT, validateSignup, type SignupErrors } from "@/lib/signup";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -62,9 +62,12 @@ export async function signUp(slug: string, _prev: SignupState, fd: FormData): Pr
     return { status: "done", errors: {} };
   }
 
+  // Signed up through Aníbal's own link: credit the referral to him.
+  const referrer_id = source === "anibal" ? await getReferrerId() : null;
+
   const { data: lead, error } = await admin
     .from("leads")
-    .insert({ ...input, source })
+    .insert({ ...input, source, referrer_id })
     .select("id")
     .single();
   if (error || !lead) {
@@ -79,6 +82,6 @@ export async function signUp(slug: string, _prev: SignupState, fd: FormData): Pr
   }
 
   const leadId = lead.id as string;
-  after(() => notify("lead_added", leadId, { addedBy: null, source })); // customer welcome + Danny
+  after(() => notify("lead_added", leadId, { addedBy: null, source })); // customer welcome + Danny (+ Aníbal)
   return { status: "done", errors: {} };
 }

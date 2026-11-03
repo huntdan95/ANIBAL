@@ -5,6 +5,7 @@ import { FILTERS, filterLeads, type Filter } from "@/lib/leads/filter";
 import type { Lead } from "@/lib/types";
 import { PlusIcon, SearchIcon, UsersIcon } from "./icons";
 import { LeadCard } from "./LeadCard";
+import { ShareLink } from "./ShareLink";
 import { buttonClass, Notice, PageTitle } from "./ui";
 
 /** The lead list screen (Danny & Aníbal). Data comes in already limited by the database rules. */
@@ -16,6 +17,7 @@ export function LeadsView({
   lang,
   isDanny,
   justAdded,
+  shareUrl,
 }: {
   all: Lead[];
   filter: Filter;
@@ -24,6 +26,8 @@ export function LeadsView({
   lang: Lang;
   isDanny: boolean;
   justAdded: boolean;
+  /** Aníbal's referral link (only passed for Aníbal) */
+  shareUrl?: string;
 }) {
   const leads = filterLeads(all, filter, q);
   const count = (f: Filter) => filterLeads(all, f, q).length;
@@ -42,6 +46,8 @@ export function LeadsView({
       </div>
 
       {justAdded && <Notice>{t.leads.added}</Notice>}
+
+      {shareUrl && <ShareLink url={shareUrl} lang={lang} />}
 
       <Form action="/leads" className="relative">
         <input type="hidden" name="f" value={filter} />

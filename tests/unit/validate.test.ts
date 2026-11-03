@@ -34,9 +34,17 @@ describe("referral form checks", () => {
     });
   });
 
-  it("requires the required fields", () => {
+  it("only name, phone and email are required", () => {
     const { errors } = validateLead(form({}));
-    expect(Object.keys(errors).sort()).toEqual(["city", "email", "full_name", "phone", "state", "street", "zip"]);
+    expect(Object.keys(errors).sort()).toEqual(["email", "full_name", "phone"]);
+  });
+
+  it("a referral with just name, phone and email saves no address (not even the default state)", () => {
+    const { input, errors } = validateLead(
+      form({ full_name: "Juan Pérez", phone: "6155550101", email: "juan@example.com", state: "TN" }),
+    );
+    expect(errors).toEqual({});
+    expect(input).toMatchObject({ street: null, city: null, state: null, zip: null, source: null });
   });
 
   it("phone must be 10 digits; a leading 1 is dropped", () => {

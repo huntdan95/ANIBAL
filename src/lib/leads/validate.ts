@@ -7,10 +7,10 @@ export type LeadInput = {
   full_name: string;
   phone: string;
   email: string;
-  street: string;
-  city: string;
-  state: string;
-  zip: string;
+  street: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
   business_name: string | null;
   language: "es" | "en";
   needs_notes: string | null;
@@ -44,10 +44,10 @@ export function validateLead(fd: FormData): { input: LeadInput; errors: FieldErr
     full_name: text(fd, "full_name").replace(/\s+/g, " "),
     phone: normalizePhone(text(fd, "phone")),
     email: text(fd, "email").toLowerCase(),
-    street: text(fd, "street"),
-    city: text(fd, "city"),
-    state: text(fd, "state").toUpperCase(),
-    zip: /^\d{5}-\d{4}$/.test(zipRaw) ? zipRaw.slice(0, 5) : zipRaw,
+    street: optional(text(fd, "street")),
+    city: optional(text(fd, "city")),
+    state: optional(text(fd, "state").toUpperCase()),
+    zip: optional(/^\d{5}-\d{4}$/.test(zipRaw) ? zipRaw.slice(0, 5) : zipRaw),
     business_name: optional(text(fd, "business_name")),
     language: text(fd, "language") === "en" ? "en" : "es",
     needs_notes: optional(text(fd, "needs_notes")),
@@ -61,14 +61,14 @@ export function validateLead(fd: FormData): { input: LeadInput; errors: FieldErr
   else if (input.phone.length !== 10) errors.phone = "phone";
   if (!input.email) errors.email = "required";
   else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(input.email) || input.email.length > 200) errors.email = "email";
-  if (!input.street) errors.street = "required";
-  else if (input.street.length > 200) errors.street = "tooLong";
-  if (!input.city) errors.city = "required";
-  else if (input.city.length > 100) errors.city = "tooLong";
-  if (!input.state) errors.state = "required";
-  else if (!STATE_CODES.has(input.state)) errors.state = "state";
-  if (!input.zip) errors.zip = "required";
-  else if (!/^\d{5}$/.test(input.zip)) errors.zip = "zip";
+  // Address is optional on the referral form (only name, phone and email are required),
+  // but whatever is typed must make sense.
+  if (input.street && input.street.length > 200) errors.street = "tooLong";
+  if (input.city && input.city.length > 100) errors.city = "tooLong";
+  if (input.state && !STATE_CODES.has(input.state)) errors.state = "state";
+  if (input.zip && !/^\d{5}$/.test(input.zip)) errors.zip = "zip";
+  // The state picker starts on Tennessee; don't save it when no address was given.
+  if (!input.street && !input.city && !input.zip) input.state = null;
   if (input.business_name && input.business_name.length > 200) errors.business_name = "tooLong";
   if (input.needs_notes && input.needs_notes.length > 2000) errors.needs_notes = "tooLong";
 

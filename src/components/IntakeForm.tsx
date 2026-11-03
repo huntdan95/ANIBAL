@@ -64,11 +64,11 @@ export function IntakeForm({
             <span className="truncate">{email}</span>
           </p>
         </div>
-        <Field {...f("street")} label={messages[lang].form.street} maxLength={200} />
-        <Field {...f("city")} label={messages[lang].form.city} maxLength={100} />
+        <Field {...f("street")} label={`${messages[lang].form.street} *`} maxLength={200} />
+        <Field {...f("city")} label={`${messages[lang].form.city} *`} maxLength={100} />
         <div className="grid grid-cols-[1.4fr_1fr] gap-3">
           <label className="block">
-            <span className="mb-1.5 block text-base font-semibold text-slate-800">{messages[lang].form.state}</span>
+            <span className="mb-1.5 block text-base font-semibold text-slate-800">{messages[lang].form.state} *</span>
             <select
               name="state"
               defaultValue={str("state") || "TN"}
@@ -81,7 +81,7 @@ export function IntakeForm({
               ))}
             </select>
           </label>
-          <Field {...f("zip")} label={messages[lang].form.zip} inputMode="numeric" maxLength={10} />
+          <Field {...f("zip")} label={`${messages[lang].form.zip} *`} inputMode="numeric" maxLength={10} />
         </div>
         <LanguageChoice label={messages[lang].form.language} value={str("language")} />
       </Section>
