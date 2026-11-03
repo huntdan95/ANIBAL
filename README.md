@@ -5,7 +5,7 @@ A small web app that keeps three people up to date on a referred insurance lead:
 Everyone signs in with an email link, so there are no passwords. Spanish is the default, with an ES/EN button at the top.
 
 > Status: being built step by step. This README grows with each step.
-> Done so far: database and security rules (step 1) and login (step 2).
+> Done so far: database and security rules (step 1), login (step 2), lead list and referral form (step 3).
 
 ---
 
@@ -59,6 +59,25 @@ Never put it in an email, a chat, or a file on GitHub.
 
 ---
 
+## Optional: load the 3 example leads ("EJEMPLO")
+Do this **after** you and Aníbal have each signed in once, so the examples show up for him too.
+
+1. On GitHub, open `supabase/seed.sql` and copy the raw file.
+2. In Supabase **SQL Editor** → **New query**, paste, and click **Run**.
+
+You'll get 3 fake leads, every one starting with "EJEMPLO" and tagged EJEMPLO on its card:
+- **Juan Pérez:** New, referred by Aníbal, shows "3 días sin contacto".
+- **María López:** Quote sent, referred by Aníbal.
+- **Carlos Ramírez:** Policy bound, came from the radio, lives in Georgia. Aníbal does not see this one.
+
+Running it again replaces the examples (no duplicates). To **remove** them when you're done, run this line in the SQL Editor:
+
+```sql
+delete from public.leads where is_example;
+```
+
+---
+
 ## Changing Danny's or Aníbal's email
 In Supabase **SQL Editor**, run (with the new email, all lowercase):
 
@@ -99,6 +118,7 @@ Danny, Aníbal and a customer to check that each one sees only what they should:
 ```bash
 # needs any Postgres 15+ you can connect to as a superuser
 TEST_DATABASE_URL=postgres://postgres@127.0.0.1:5432/postgres npm run test:db
+npm run test:unit   # form checks and list filters (no database needed)
 ```
 
 ---

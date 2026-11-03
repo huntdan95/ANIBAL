@@ -67,13 +67,16 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 - All UI and email text in ONE translation file (`src/i18n/messages.ts`), Spanish default, ES/EN toggle.
 - Mobile-first (Aníbal and most customers use phones): big tap targets, single column.
 - IPT brand colors (from the logo, defined in `src/app/globals.css` `@theme`): `navy` #22506B (buttons, headings, links), `steel` #6588A2 (secondary, focus), `gold` #B4AC6F (lines/badges only, too light for text), `cream` #EAE9D1, `paper` page background. Headings use `font-serif`. Logo files: `public/ipt-logo.png`, `public/ipt-shield.png`; app icon `src/app/icon.png`. Emails use the same navy/gold (`src/lib/email/template.ts`).
-- Seed data: 3 fake leads clearly marked "EJEMPLO".
-- Tests: `npm run test:db` runs the RLS tests on a plain Postgres (`TEST_DATABASE_URL`) using `tests/db/supabase-shim.sql`.
+- Seed data: 3 fake leads clearly marked "EJEMPLO" (`supabase/seed.sql`; remove with `delete from public.leads where is_example`).
+- Lead list loads all visible leads (RLS-filtered) and filters/searches in memory (`src/lib/leads/filter.ts`, accent-insensitive). Fine for hundreds of leads.
+- New lead flow (`src/app/leads/actions.ts`): insert AS the user (RLS) → `linkCustomerAccount()` creates/links the customer's sign-in account with the admin client. Staff emails are never linked as customers.
+- `/leads/[id]` is Danny-only (edit form now; stage, private details and quotes get added there later). Aníbal's cards are read-only.
+- Tests: `npm run test:db` runs the RLS + seed tests on a plain Postgres (`TEST_DATABASE_URL`) using `tests/db/supabase-shim.sql` and `tests/db/helpers.ts`. `npm run test:unit` = pure logic.
 
 ## Build order (check in with Danny after each step)
 1. [x] Database + roles + RLS (+ RLS test)
 2. [x] Login (magic link, role routing, 30-day customer invite links). Built; not yet tried against a live Supabase project.
-3. [ ] Lead list + referral form (+ seed data)
+3. [x] Lead list + referral form (+ seed data in `supabase/seed.sql`, a paste-into-SQL-Editor file, idempotent)
 4. [ ] Stages + progress bar + activity feed
 5. [ ] Email pings
 6. [ ] Customer portal (info form)

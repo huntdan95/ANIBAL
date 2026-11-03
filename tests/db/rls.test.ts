@@ -9,14 +9,9 @@
  *
  * Run:  npm run test:db   (needs a Postgres; see README "Running the tests")
  */
-import { readdirSync, readFileSync } from "node:fs";
-import path from "node:path";
-import { Client } from "pg";
+import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-
-const SERVER_URL = process.env.TEST_DATABASE_URL ?? "postgres://postgres@127.0.0.1:54329/postgres";
-const TEST_DB = "anibal_rls_test";
-const root = path.resolve(__dirname, "../..");
+import { as as asIn, createUser, freshDatabase, type Q } from "./helpers";
 
 let db: Client;
 const ids = {} as Record<
@@ -24,51 +19,16 @@ const ids = {} as Record<
   string
 >;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- test rows are loosely typed
-type Q = (sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number | null }>;
-
-/** Run `fn` as a signed-in user (or as an anonymous visitor), then undo any writes. */
-async function as<T>(who: string | null, fn: (q: Q) => Promise<T>): Promise<T> {
-  await db.query("begin");
-  try {
-    if (who) {
-      await db.query("set local role authenticated");
-      await db.query("select set_config('request.jwt.claims', $1, true)", [
-        JSON.stringify({ sub: who, role: "authenticated" }),
-      ]);
-    } else {
-      await db.query("set local role anon");
-    }
-    return await fn((sql, params) => db.query(sql, params));
-  } finally {
-    await db.query("rollback");
-  }
-}
+const as = <T,>(who: string | null, fn: (q: Q) => Promise<T>) => asIn(db, who, fn);
 
 const idsOf = (rows: { id?: string; lead_id?: string }[]) =>
   rows.map((r) => r.id ?? r.lead_id).sort();
 
 beforeAll(async () => {
-  const server = new Client({ connectionString: SERVER_URL });
-  await server.connect();
-  await server.query(`drop database if exists ${TEST_DB} with (force)`);
-  await server.query(`create database ${TEST_DB}`);
-  await server.end();
-
-  const url = new URL(SERVER_URL);
-  url.pathname = `/${TEST_DB}`;
-  db = new Client({ connectionString: url.toString() });
-  await db.connect();
-
-  await db.query(readFileSync(path.join(root, "tests/db/supabase-shim.sql"), "utf8"));
-  const migDir = path.join(root, "supabase/migrations");
-  for (const f of readdirSync(migDir).filter((f) => f.endsWith(".sql")).sort()) {
-    await db.query(readFileSync(path.join(migDir, f), "utf8"));
-  }
+  db = await freshDatabase("anibal_rls_test");
 
   // --- Fixtures (created as the database owner, like the server would) ---
-  const user = async (email: string) =>
-    (await db.query("insert into auth.users (email) values ($1) returning id", [email])).rows[0].id;
+  const user = (email: string) => createUser(db, email);
   ids.danny = await user("danny@go-ipt.com");
   ids.anibal = await user("anibalperez1000@gmail.com");
   ids.cust1 = await user("cliente1@example.com");
