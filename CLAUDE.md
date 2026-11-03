@@ -9,7 +9,7 @@ A small tool that keeps three people up to date on a referred insurance lead:
 
 ## Stack
 Next.js 16 (App Router, TypeScript, Tailwind) + Supabase (Postgres, magic-link auth, RLS, private Storage) + Resend (email) + Vercel.
-Next 16 has breaking changes vs. older training data: read `node_modules/next/dist/docs/` before writing Next code.
+Next 16 has breaking changes vs. older training data: read `node_modules/next/dist/docs/` before writing Next code. `middleware.ts` is now `src/proxy.ts`. **Cache Components is OFF on purpose** (next.config.ts), so every page renders per request.
 
 ## People & access (enforced in the DATABASE with RLS, not only the UI)
 | Role | Who | Can see / do |
@@ -55,6 +55,14 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 - New SQL functions are executable by anon/authenticated by default in Supabase, so **revoke** explicitly and grant only what's needed.
 - Every new table: enable RLS, add policies, and extend `tests/db/rls.test.ts`.
 
+## Auth implementation
+- The app sends ALL emails itself via Resend (`src/lib/email`), including sign-in links, never Supabase's mailer. Links come from `auth.admin.generateLink()` → `hashed_token` → `verifyOtp({ type: "magiclink", token_hash })`.
+- Login link → `/auth/confirm?token_hash=…` shows an "Entrar" button (POST) so email link scanners can't burn the one-time token.
+- Customer 30-day link → `/i/<token>` (sha256 stored in `invites`); each tap mints a fresh session and opens `/portal`.
+- Login page only emails existing accounts or staff emails, and shows the same message either way.
+- `createClient()` (`src/lib/supabase/server.ts`) acts as the signed-in user under RLS, so use it by default. `createAdminClient()` bypasses RLS: server-only, and only for account/link creation, the public sign-up and email recipient lookups.
+- Guard every page/action with `requireRole(...)` from `src/lib/auth.ts`.
+
 ## Code conventions
 - All UI and email text in ONE translation file (`src/i18n/messages.ts`), Spanish default, ES/EN toggle.
 - Mobile-first (Aníbal and most customers use phones): big tap targets, single column.
@@ -63,7 +71,7 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 
 ## Build order (check in with Danny after each step)
 1. [x] Database + roles + RLS (+ RLS test)
-2. [ ] Login (magic link, role routing, 30-day customer invite links)
+2. [x] Login (magic link, role routing, 30-day customer invite links). Built; not yet tried against a live Supabase project.
 3. [ ] Lead list + referral form (+ seed data)
 4. [ ] Stages + progress bar + activity feed
 5. [ ] Email pings

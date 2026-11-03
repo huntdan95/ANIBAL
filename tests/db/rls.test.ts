@@ -24,6 +24,7 @@ const ids = {} as Record<
   string
 >;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- test rows are loosely typed
 type Q = (sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number | null }>;
 
 /** Run `fn` as a signed-in user (or as an anonymous visitor), then undo any writes. */
