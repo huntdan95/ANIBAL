@@ -5,7 +5,8 @@ A small web app that keeps three people up to date on a referred insurance lead:
 Everyone signs in with an email link, so there are no passwords. Spanish is the default, with an ES/EN button at the top.
 
 > Status: being built step by step. This README grows with each step.
-> Done so far: database and security rules (step 1), login (step 2), lead list and referral form (step 3).
+> Done so far: database and security rules (step 1), login (step 2), lead list and referral form (step 3),
+> stages, progress bar and activity feed (step 4), email pings (step 5).
 
 ---
 
@@ -56,6 +57,46 @@ so nobody else can make one.
 
 ⚠️ The **secret key** can read everything. Only paste it into Vercel's or your own `.env.local` settings.
 Never put it in an email, a chat, or a file on GitHub.
+
+---
+
+## Part 2: Set up email (Resend)
+
+The app sends every email itself: sign-in links, customer links, and the "pings".
+Customers who hit **Reply** reach **danny@go-ipt.com**, whatever address the email is sent from.
+
+### 1. Get an API key (5 minutes)
+1. Sign up at [resend.com](https://resend.com) (free: 3,000 emails a month, 100 a day).
+2. Go to **API Keys** → **Create API Key** → name it `anibal-referidos`, permission **Sending access** → **Add**.
+3. Copy the key (it starts with `re_`). You only see it once. You'll paste it into Vercel as `RESEND_API_KEY`.
+
+**Until step 2 below is done**, Resend only delivers to the email address you signed up to Resend with,
+sent from `onboarding@resend.dev`. That's fine for trying the app yourself, but customers and Aníbal won't get anything yet.
+
+### 2. Send from your own domain (so everyone gets the emails)
+1. Buy a domain at any registrar (Cloudflare, Namecheap, Porkbun…), about $10–15 a year.
+   Something like `iptreferidos.com`. You can use the same domain for the website later.
+2. In Resend: **Domains** → **Add Domain** → type your domain → **Add**.
+3. Resend shows a few **DNS records** (TXT and MX). In your registrar's DNS settings, add each one exactly as shown.
+4. Back in Resend, click **Verify**. It can take a few minutes up to a few hours.
+5. Once it says **Verified**, set `EMAIL_FROM` to an address at that domain, for example:
+   `EMAIL_FROM="Danny Hunt - IPT <danny@iptreferidos.com>"`
+   (That address doesn't need a mailbox. Replies go to `EMAIL_REPLY_TO`, which is danny@go-ipt.com.)
+
+### Who gets which email
+| When… | Danny | Aníbal (his referrals only) | Customer |
+|---|---|---|---|
+| Aníbal adds a referral | ✓ | | ✓ welcome + 30-day link |
+| Danny adds a referral | | ✓ if "Referido por Aníbal" | ✓ welcome + 30-day link |
+| Danny marks **Contactado** | | ✓ | |
+| Customer sends their info | ✓ | ✓ | |
+| Danny posts a quote | | ✓ | ✓ "Su cotización está lista" + link |
+| Customer taps **Quiero seguir adelante** | ✓ | (shows in his Actividad tab) | |
+| Danny marks **Póliza activa** | | ✓ | ✓ thank-you |
+| Danny marks **No compró / No califica** | | ✓ | (never) |
+
+Each email is in the recipient's language: Danny in English, Aníbal in Spanish, and the customer in the language chosen on their referral.
+You can change your own language with the ES/EN button at the top of the app.
 
 ---
 
@@ -110,6 +151,7 @@ npm run dev                  # http://localhost:3000
 ```
 
 Without a `RESEND_API_KEY`, emails (including sign-in links) are printed in the terminal instead of sent.
+Each ping is also logged as `[ping] <event> → <who> (email) sent`.
 
 ### Running the tests
 The security tests run the real database migrations on a throwaway Postgres database and sign in as

@@ -63,6 +63,14 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 - `createClient()` (`src/lib/supabase/server.ts`) acts as the signed-in user under RLS, so use it by default. `createAdminClient()` bypasses RLS: server-only, and only for account/link creation, the public sign-up and email recipient lookups.
 - Guard every page/action with `requireRole(...)` from `src/lib/auth.ts`.
 
+## Pings implementation (`src/lib/notify/`)
+- `plan.ts`: `planPings(event, {referred, addedBy})` decides WHO gets WHICH template (pure, unit-tested). `stageChangeEvent(from, to)` maps Danny's dropdown changes (only contacted/bound/not_bought/not_fit ping).
+- `render.ts`: `renderPing()` builds the email in the recipient's language from `messages.ping.templates`. Customer emails get the 30-day link footer.
+- `channels.ts`: `Channel` interface; only `emailChannel` is in `CHANNELS`. The SMS (Twilio) slot is documented there. Don't build it until Danny asks.
+- `index.ts`: `notify(event, leadId, opts)` loads lead + people with the admin client, makes the customer's invite link, sends. Never throws. Always call inside `after(() => notify(...))` from `next/server`, before `redirect()`.
+- Events still to wire: `info_sent` (step 6, after `submit_intake`), `quote_posted` + `proceed` (step 7), `lead_added` with `addedBy: null` + `channel` (step 8 public sign-up).
+- Pings must never contain dollar amounts (a test checks every template).
+
 ## Code conventions
 - All UI and email text in ONE translation file (`src/i18n/messages.ts`), Spanish default, ES/EN toggle.
 - Mobile-first (Aníbal and most customers use phones): big tap targets, single column.
@@ -81,7 +89,7 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 2. [x] Login (magic link, role routing, 30-day customer invite links). Built; not yet tried against a live Supabase project.
 3. [x] Lead list + referral form (+ seed data in `supabase/seed.sql`, a paste-into-SQL-Editor file, idempotent)
 4. [x] Stages + progress bar + activity feed
-5. [ ] Email pings
+5. [x] Email pings
 6. [ ] Customer portal (info form)
 7. [ ] Quote posting + customer quotes page
 8. [ ] Public sign-up page

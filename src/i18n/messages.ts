@@ -7,6 +7,9 @@
  * and none of them are insurance people.
  */
 
+/** Values a ping email can mention. Never dollar amounts. */
+export type PingVars = { name: string; first: string; phone: string; place?: string; channel?: string };
+
 const es = {
   app: {
     name: "IPT Referidos",
@@ -160,6 +163,85 @@ const es = {
       body: "Toque el botón para entrar. El enlace funciona por 1 hora y una sola vez.",
       button: "Entrar",
       ignore: "Si usted no pidió este enlace, puede ignorar este correo.",
+    },
+  },
+  /** The "pings": one short email per event. v = { name, first, phone, place, channel }. */
+  ping: {
+    linkDays: "Este enlace funciona por 30 días.",
+    buttons: {
+      viewLead: "Ver referido",
+      myReferrals: "Ver mis referidos",
+      sendInfo: "Enviar mi información",
+      viewQuote: "Ver mi cotización",
+      myFile: "Ver mi archivo",
+    },
+    templates: {
+      newReferral: (v: PingVars) => ({
+        subject: `Nuevo referido de Aníbal: ${v.name}`,
+        lines: [`Aníbal le refirió a ${v.name}.`, `Teléfono: ${v.phone}${v.place ? ` · ${v.place}` : ""}`],
+      }),
+      newSignup: (v: PingVars) => ({
+        subject: `Nueva inscripción: ${v.name}`,
+        lines: [
+          `${v.name} se inscribió en la página de IPT${v.channel ? ` (${v.channel})` : ""}.`,
+          `Teléfono: ${v.phone}`,
+        ],
+      }),
+      addedByDanny: (v: PingVars) => ({
+        subject: `Danny agregó a ${v.name}`,
+        lines: [`Danny agregó a ${v.name} a sus referidos. Gracias por la recomendación.`],
+      }),
+      welcome: (v: PingVars) => ({
+        subject: "Danny Hunt de IPT le ayudará con su seguro",
+        lines: [
+          `Hola, ${v.first}:`,
+          "Danny Hunt de IPT le ayudará con su seguro. Toque aquí para enviar su información.",
+        ],
+      }),
+      contacted: (v: PingVars) => ({
+        subject: `Danny contactó a ${v.name}`,
+        lines: [`Danny ya se comunicó con ${v.name}.`],
+      }),
+      infoSentDanny: (v: PingVars) => ({
+        subject: `${v.name} envió su información`,
+        lines: [`${v.name} envió su información. Ya puede preparar la cotización.`],
+      }),
+      infoSentAnibal: (v: PingVars) => ({
+        subject: `${v.name} envió su información`,
+        lines: [`${v.name} envió su información a Danny.`],
+      }),
+      quoteReady: (v: PingVars) => ({
+        subject: "Su cotización está lista",
+        lines: [`Hola, ${v.first}:`, "Su cotización de IPT está lista. Toque aquí para verla."],
+      }),
+      quoteSent: (v: PingVars) => ({
+        subject: `Danny le envió la cotización a ${v.name}`,
+        lines: [`Danny le envió la cotización a ${v.name}.`],
+      }),
+      proceed: (v: PingVars) => ({
+        subject: `${v.name} quiere seguir adelante`,
+        lines: [`${v.name} tocó «Quiero seguir adelante» en su cotización.`, `Llámele para terminar: ${v.phone}`],
+      }),
+      boundCustomer: (v: PingVars) => ({
+        subject: "¡Gracias! Su póliza está activa",
+        lines: [
+          `Hola, ${v.first}:`,
+          "Gracias por confiar en IPT. Su póliza ya está activa.",
+          "Si tiene preguntas, llame a Danny al 615-295-6003.",
+        ],
+      }),
+      boundAnibal: (v: PingVars) => ({
+        subject: `${v.name} ya tiene su póliza`,
+        lines: [`${v.name} ya tiene su póliza. ¡Gracias por el referido!`],
+      }),
+      notBought: (v: PingVars) => ({
+        subject: `Novedad sobre ${v.name}`,
+        lines: [`${v.name} decidió no comprar por ahora.`],
+      }),
+      notFit: (v: PingVars) => ({
+        subject: `Novedad sobre ${v.name}`,
+        lines: [`Esta vez IPT no pudo ofrecerle un seguro a ${v.name}.`],
+      }),
     },
   },
 };
@@ -318,6 +400,81 @@ const en: Messages = {
       body: "Tap the button to sign in. The link works for 1 hour, one time.",
       button: "Sign in",
       ignore: "If you didn't ask for this link, you can ignore this email.",
+    },
+  },
+  ping: {
+    linkDays: "This link works for 30 days.",
+    buttons: {
+      viewLead: "View referral",
+      myReferrals: "See my referrals",
+      sendInfo: "Send my information",
+      viewQuote: "See my quote",
+      myFile: "See my file",
+    },
+    templates: {
+      newReferral: (v: PingVars) => ({
+        subject: `New referral from Aníbal: ${v.name}`,
+        lines: [`Aníbal referred ${v.name} to you.`, `Phone: ${v.phone}${v.place ? ` · ${v.place}` : ""}`],
+      }),
+      newSignup: (v: PingVars) => ({
+        subject: `New sign-up: ${v.name}`,
+        lines: [`${v.name} signed up on the IPT page${v.channel ? ` (${v.channel})` : ""}.`, `Phone: ${v.phone}`],
+      }),
+      addedByDanny: (v: PingVars) => ({
+        subject: `Danny added ${v.name}`,
+        lines: [`Danny added ${v.name} to your referrals. Thanks for the recommendation.`],
+      }),
+      welcome: (v: PingVars) => ({
+        subject: "Danny Hunt from IPT will help you with your insurance",
+        lines: [
+          `Hi ${v.first},`,
+          "Danny Hunt from IPT will help you with your insurance. Tap here to send your information.",
+        ],
+      }),
+      contacted: (v: PingVars) => ({
+        subject: `Danny contacted ${v.name}`,
+        lines: [`Danny has reached out to ${v.name}.`],
+      }),
+      infoSentDanny: (v: PingVars) => ({
+        subject: `${v.name} sent their info`,
+        lines: [`${v.name} sent their information. You can prepare the quote now.`],
+      }),
+      infoSentAnibal: (v: PingVars) => ({
+        subject: `${v.name} sent their info`,
+        lines: [`${v.name} sent their information to Danny.`],
+      }),
+      quoteReady: (v: PingVars) => ({
+        subject: "Your quote is ready",
+        lines: [`Hi ${v.first},`, "Your IPT quote is ready. Tap here to see it."],
+      }),
+      quoteSent: (v: PingVars) => ({
+        subject: `Danny sent ${v.name} a quote`,
+        lines: [`Danny sent ${v.name} a quote.`],
+      }),
+      proceed: (v: PingVars) => ({
+        subject: `${v.name} wants to move forward`,
+        lines: [`${v.name} tapped "I want to move forward" on their quote.`, `Call them to finish: ${v.phone}`],
+      }),
+      boundCustomer: (v: PingVars) => ({
+        subject: "Thank you! Your policy is active",
+        lines: [
+          `Hi ${v.first},`,
+          "Thank you for trusting IPT. Your policy is now active.",
+          "Questions? Call Danny at 615-295-6003.",
+        ],
+      }),
+      boundAnibal: (v: PingVars) => ({
+        subject: `${v.name} has their policy`,
+        lines: [`${v.name} has their policy. Thanks for the referral!`],
+      }),
+      notBought: (v: PingVars) => ({
+        subject: `Update on ${v.name}`,
+        lines: [`${v.name} decided not to buy for now.`],
+      }),
+      notFit: (v: PingVars) => ({
+        subject: `Update on ${v.name}`,
+        lines: [`IPT wasn't able to offer ${v.name} coverage this time.`],
+      }),
     },
   },
 };

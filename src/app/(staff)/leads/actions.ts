@@ -1,9 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { requireRole } from "@/lib/auth";
 import { getReferrerId, linkCustomerAccount } from "@/lib/leads/accounts";
 import { validateLead, type LeadFormState } from "@/lib/leads/validate";
+import { notify } from "@/lib/notify";
+import { stageChangeEvent } from "@/lib/notify/plan";
 import { createClient } from "@/lib/supabase/server";
 import { STAGES, type Stage } from "@/lib/types";
 
@@ -34,6 +37,11 @@ export async function createLead(_prev: LeadFormState, fd: FormData): Promise<Le
   } catch (err) {
     console.error("Could not create the customer's account:", err);
   }
+
+  // Customer welcome email + ping to Danny (or to Aníbal if Danny added his referral).
+  const leadId = data.id;
+  const addedBy = profile.role === "referrer" ? "referrer" : "admin";
+  after(() => notify("lead_added", leadId, { addedBy }));
 
   redirect("/leads?added=1");
 }
@@ -78,6 +86,9 @@ export async function setStage(id: string, fd: FormData) {
   if (!(STAGES as readonly string[]).includes(stage)) redirect(`/leads/${id}`);
 
   const supabase = await createClient();
+  const { data: before } = await supabase.from("leads").select("stage").eq("id", id).maybeSingle();
+  if (!before) redirect("/leads");
+
   const { error } = await supabase
     .from("leads")
     .update({ stage: stage as Stage })
@@ -86,5 +97,10 @@ export async function setStage(id: string, fd: FormData) {
     console.error("setStage failed:", error);
     redirect(`/leads/${id}?stage=error`);
   }
+
+  // Contacted → Aníbal. Bound → customer + Aníbal. Closed → Aníbal only.
+  const event = stageChangeEvent(before.stage as Stage, stage as Stage);
+  if (event) after(() => notify(event, id));
+
   redirect(`/leads/${id}?stage=saved`);
 }
