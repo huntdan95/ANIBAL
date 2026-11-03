@@ -7,7 +7,7 @@ Everyone signs in with an email link, so there are no passwords. Spanish is the 
 > Status: being built step by step. This README grows with each step.
 > Done so far: database and security rules (step 1), login (step 2), lead list and referral form (step 3),
 > stages, progress bar and activity feed (step 4), email pings (step 5), customer "Mi información" form (step 6),
-> quotes and Danny-only details (step 7).
+> quotes and Danny-only details (step 7), public sign-up page (step 8).
 
 ---
 
@@ -98,6 +98,27 @@ sent from `onboarding@resend.dev`. That's fine for trying the app yourself, but 
 
 Each email is in the recipient's language: Danny in English, Aníbal in Spanish, and the customer in the language chosen on their referral.
 You can change your own language with the ES/EN button at the top of the app.
+
+---
+
+## Your public sign-up links (radio, newsletter, magazine, events)
+
+Share these so people can sign up on their own. Replace `YOUR-SITE` with your website address (for example `iptreferidos.com`):
+
+| Where | Link to share | Shows up as |
+|---|---|---|
+| Radio | `https://YOUR-SITE/r/radio` | Radio |
+| Newsletter | `https://YOUR-SITE/r/boletin` | Boletín |
+| Magazine | `https://YOUR-SITE/r/revista` | Revista |
+| Events | `https://YOUR-SITE/r/evento` | Evento |
+
+Each person who signs up becomes a **Nuevo** lead tagged with that channel. They get an email with their 30-day link, and you get a "New sign-up" email.
+If the same email signs up again while their lead is still open, they just get their link again (no duplicate).
+
+Tip: for print (magazine, flyers at events), turn the link into a QR code with any free QR code maker.
+
+Built-in protection: a hidden trap field for bots, names can't contain links, and if more than 25 people sign up
+within 10 minutes the page pauses and asks people to call you instead.
 
 ---
 

@@ -351,6 +351,23 @@ describe("quote PDFs in storage", () => {
 });
 
 describe("Not signed in", () => {
+  it("can't create a lead directly (the sign-up page goes through the server with its checks)", async () => {
+    await expect(
+      as(null, (q) => q("insert into leads (full_name, phone, email) values ('Bot', '6155550000', 'bot@example.com')")),
+    ).rejects.toThrow(/permission denied/);
+  });
+
+  it("a public sign-up (made by the server) shows in the feed as 'se inscribió' with no actor", async () => {
+    await db.query("begin");
+    const { rows } = await db.query(
+      "insert into public.leads (full_name, phone, email, source) values ('Rosa', '6155550177', 'rosa@example.com', 'radio') returning id, stage, referrer_id",
+    );
+    expect(rows[0]).toMatchObject({ stage: "new", referrer_id: null });
+    const ev = await db.query("select kind, actor_role from public.events where lead_id = $1", [rows[0].id]);
+    expect(ev.rows).toEqual([{ kind: "created", actor_role: null }]);
+    await db.query("rollback");
+  });
+
   it("sees nothing", async () => {
     for (const table of ["leads", "lead_private", "intake", "quotes", "events", "profiles"]) {
       await expect(as(null, (q) => q(`select * from ${table}`))).rejects.toThrow(/permission denied/);

@@ -1,9 +1,10 @@
 import "server-only";
-import { isLang, type Lang } from "@/i18n/messages";
+import { isLang, messages, type Lang } from "@/i18n/messages";
 import { env } from "@/lib/env";
 import { formatPhone } from "@/lib/format";
 import { createInviteLink } from "@/lib/links";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Source } from "@/lib/types";
 import { CHANNELS, type Recipient } from "./channels";
 import { planPings, type PingEvent, type PlanContext, type Who } from "./plan";
 import { firstName, renderPing } from "./render";
@@ -18,7 +19,13 @@ export type { PingEvent } from "./plan";
 export async function notify(
   event: PingEvent,
   leadId: string,
-  opts: { addedBy?: PlanContext["addedBy"]; channel?: string } = {},
+  opts: {
+    addedBy?: PlanContext["addedBy"];
+    /** public sign-up: which channel they came from (named in each person's language) */
+    source?: Source;
+    /** send only to these people (e.g. re-sending a customer's link) */
+    only?: Who[];
+  } = {},
 ): Promise<void> {
   try {
     const admin = createAdminClient();
@@ -29,7 +36,9 @@ export async function notify(
       .single();
     if (error || !lead) throw new Error(`lead ${leadId} not found: ${error?.message}`);
 
-    const plan = planPings(event, { referred: Boolean(lead.referrer_id), addedBy: opts.addedBy });
+    const plan = planPings(event, { referred: Boolean(lead.referrer_id), addedBy: opts.addedBy }).filter(
+      (p) => !opts.only || opts.only.includes(p.to),
+    );
     if (plan.length === 0) return;
 
     const site = env.siteUrl();
@@ -38,7 +47,6 @@ export async function notify(
       first: firstName(lead.full_name),
       phone: formatPhone(lead.phone),
       place: [lead.city, lead.state].filter(Boolean).join(", ") || undefined,
-      channel: opts.channel,
     };
 
     // Look up each person only if someone in the plan needs them.
@@ -79,10 +87,11 @@ export async function notify(
       const to = people[ping.to];
       const url = urls[ping.to];
       if (!to || !url) continue;
-      const message = renderPing(ping, to.lang, vars, url);
-      for (const channel of CHANNELS) {
-        const ok = await channel.send(to, message);
-        console.log(`[ping] ${event} → ${ping.to} (${channel.name}) ${ok ? "sent" : "FAILED"}`);
+      const channel = opts.source ? messages[to.lang].source[opts.source] : undefined;
+      const message = renderPing(ping, to.lang, { ...vars, channel }, url);
+      for (const ch of CHANNELS) {
+        const ok = await ch.send(to, message);
+        console.log(`[ping] ${event} → ${ping.to} (${ch.name}) ${ok ? "sent" : "FAILED"}`);
       }
     }
   } catch (err) {

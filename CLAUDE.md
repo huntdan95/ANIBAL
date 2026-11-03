@@ -76,12 +76,16 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 - Customer "Mis cotizaciones" (`CustomerQuotes.tsx`): note, date, PDF, "Quiero seguir adelante" → `wantToProceed` → `quote_proceed()` RPC (first tap only) → `after(notify("proceed"))`. The screen says it doesn't buy anything and Danny will call. The button is hidden once the lead is bound/closed.
 - Portal shows "🎉 ¡Su póliza está activa!" when the stage is `bound`.
 
+## Public sign-up (`/r/[channel]`)
+- Links: `radio`, `boletin`, `revista`, `evento` (English slugs also work) → `lead_source` via `src/lib/signup.ts` `CHANNELS`. Unknown slug → 404.
+- `src/app/r/[channel]/actions.ts` `signUp`: runs with the admin client (visitor isn't signed in). Honeypot field `website`; names can't contain links/emails; flood guard (`SIGNUP_FLOOD_LIMIT` public sign-ups per 10 min); an open lead with the same email → re-send the customer's link only (`notify(..., { only: ["customer"] })`), no duplicate.
+- New lead has `created_by = null` (feed: "X se inscribió"), then `linkCustomerAccount`, then `notify("lead_added", id, { addedBy: null, source })` → customer welcome + Danny "New sign-up (Radio)".
+
 ## Pings implementation (`src/lib/notify/`)
 - `plan.ts`: `planPings(event, {referred, addedBy})` decides WHO gets WHICH template (pure, unit-tested). `stageChangeEvent(from, to)` maps Danny's dropdown changes (only contacted/bound/not_bought/not_fit ping).
 - `render.ts`: `renderPing()` builds the email in the recipient's language from `messages.ping.templates`. Customer emails get the 30-day link footer.
 - `channels.ts`: `Channel` interface; only `emailChannel` is in `CHANNELS`. The SMS (Twilio) slot is documented there. Don't build it until Danny asks.
 - `index.ts`: `notify(event, leadId, opts)` loads lead + people with the admin client, makes the customer's invite link, sends. Never throws. Always call inside `after(() => notify(...))` from `next/server`, before `redirect()`.
-- Events still to wire: `lead_added` with `addedBy: null` + `channel` (step 8 public sign-up).
 - Pings must never contain dollar amounts (a test checks every template).
 
 ## Code conventions
@@ -108,7 +112,7 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 5. [x] Email pings
 6. [x] Customer portal (info form)
 7. [x] Quote posting + customer quotes page (+ Danny-only details)
-8. [ ] Public sign-up page
+8. [x] Public sign-up page
 9. [ ] Scorecard
 
 ## Decisions made with Danny
