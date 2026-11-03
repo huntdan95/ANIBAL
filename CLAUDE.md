@@ -63,12 +63,18 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 - `createClient()` (`src/lib/supabase/server.ts`) acts as the signed-in user under RLS, so use it by default. `createAdminClient()` bypasses RLS: server-only, and only for account/link creation, the public sign-up and email recipient lookups.
 - Guard every page/action with `requireRole(...)` from `src/lib/auth.ts`.
 
+## Customer portal (`/portal`)
+- `PortalView.tsx`: greeting, progress bar, "Mi información" (`IntakeForm.tsx`), "Mis cotizaciones" (filled in step 7), Danny's contact card. Before the first submit the form is the main thing on the page; afterwards it's folded into "Ver o cambiar mi información".
+- `IntakeForm.tsx`: contact info (email shown read-only, since it's their login), big "what to insure" tiles (business / workers / vehicle / home / other), follow-ups shown only for what's checked (business: name, type of work, weekly payroll, weeks/year; home: roof year; vehicle: # vehicles, # drivers; other: text).
+- `src/lib/portal/validate.ts` (`validateIntake`) → `src/app/portal/actions.ts` (`submitIntake`) → DB `submit_intake()` RPC (ownership-checked) → `after(notify("info_sent"))`. The lead id comes from the server, never from the form.
+- No DOB / license / VIN / SSN fields (a unit test checks the validator). The privacy note on the form says so.
+
 ## Pings implementation (`src/lib/notify/`)
 - `plan.ts`: `planPings(event, {referred, addedBy})` decides WHO gets WHICH template (pure, unit-tested). `stageChangeEvent(from, to)` maps Danny's dropdown changes (only contacted/bound/not_bought/not_fit ping).
 - `render.ts`: `renderPing()` builds the email in the recipient's language from `messages.ping.templates`. Customer emails get the 30-day link footer.
 - `channels.ts`: `Channel` interface; only `emailChannel` is in `CHANNELS`. The SMS (Twilio) slot is documented there. Don't build it until Danny asks.
 - `index.ts`: `notify(event, leadId, opts)` loads lead + people with the admin client, makes the customer's invite link, sends. Never throws. Always call inside `after(() => notify(...))` from `next/server`, before `redirect()`.
-- Events still to wire: `info_sent` (step 6, after `submit_intake`), `quote_posted` + `proceed` (step 7), `lead_added` with `addedBy: null` + `channel` (step 8 public sign-up).
+- Events still to wire: `quote_posted` + `proceed` (step 7), `lead_added` with `addedBy: null` + `channel` (step 8 public sign-up).
 - Pings must never contain dollar amounts (a test checks every template).
 
 ## Code conventions
@@ -93,7 +99,7 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 3. [x] Lead list + referral form (+ seed data in `supabase/seed.sql`, a paste-into-SQL-Editor file, idempotent)
 4. [x] Stages + progress bar + activity feed
 5. [x] Email pings
-6. [ ] Customer portal (info form)
+6. [x] Customer portal (info form)
 7. [ ] Quote posting + customer quotes page
 8. [ ] Public sign-up page
 9. [ ] Scorecard

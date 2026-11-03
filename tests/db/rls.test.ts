@@ -263,6 +263,51 @@ describe("Customer", () => {
     });
   });
 
+  it("sending the info again updates the answers and logs it, without moving the stage back", async () => {
+    await as(ids.cust1, async (q) => {
+      await q(submitSql, submitArgs(ids.lead1));
+      const before = (await q("select info_sent_at from leads where id = $1", [ids.lead1])).rows[0].info_sent_at;
+      await q(
+        `select submit_intake($1, 'Juan Pérez', '6155550100', '1 Main St', 'Nashville', 'TN', '37201',
+          null, 'en', '{home}', null, null, null, null, 2015, null, null)`,
+        [ids.lead1],
+      );
+      const { rows } = await q("select stage, info_sent_at, language from leads where id = $1", [ids.lead1]);
+      expect(rows[0]).toMatchObject({ stage: "info_sent", language: "en" });
+      expect(rows[0].info_sent_at).toEqual(before); // the first date is kept
+      const intake = (await q("select needs, roof_year, weekly_payroll from intake where lead_id = $1", [ids.lead1]))
+        .rows[0];
+      expect(intake).toEqual({ needs: ["home"], roof_year: 2015, weekly_payroll: null });
+      // Both sends show up in the feed (read as the database owner, since customers can't read events).
+      await q("reset role");
+      const ev = await q("select count(*)::int as n from events where lead_id = $1 and kind = 'info_sent'", [
+        ids.lead1,
+      ]);
+      expect(ev.rows[0].n).toBe(2);
+    });
+  });
+
+  it("bad data is refused by the database even if the app's checks are skipped", async () => {
+    await expect(
+      as(ids.cust1, (q) =>
+        q(
+          `select submit_intake($1, 'Juan', '555', '1 Main', 'Nashville', 'TN', '37201',
+            null, 'es', '{home}', null, null, null, null, null, null, null)`,
+          [ids.lead1],
+        ),
+      ),
+    ).rejects.toThrow(/check constraint/);
+    await expect(
+      as(ids.cust1, (q) =>
+        q(
+          `select submit_intake($1, 'Juan', '6155550100', '1 Main', 'Nashville', 'TN', '37201',
+            null, 'es', '{ssn}', null, null, null, null, null, null, null)`,
+          [ids.lead1],
+        ),
+      ),
+    ).rejects.toThrow(/check constraint/);
+  });
+
   it("cannot submit info or press 'Quiero seguir adelante' on someone else's file", async () => {
     await expect(as(ids.cust1, (q) => q(submitSql, submitArgs(ids.lead2)))).rejects.toThrow(/not allowed/);
     await expect(as(ids.cust1, (q) => q("select quote_proceed($1)", [ids.quote2]))).rejects.toThrow(/not allowed/);

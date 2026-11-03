@@ -6,7 +6,7 @@ Everyone signs in with an email link, so there are no passwords. Spanish is the 
 
 > Status: being built step by step. This README grows with each step.
 > Done so far: database and security rules (step 1), login (step 2), lead list and referral form (step 3),
-> stages, progress bar and activity feed (step 4), email pings (step 5).
+> stages, progress bar and activity feed (step 4), email pings (step 5), customer "Mi información" form (step 6).
 
 ---
 

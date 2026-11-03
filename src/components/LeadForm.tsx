@@ -6,61 +6,10 @@ import { messages, type Lang } from "@/i18n/messages";
 import type { ErrorCode, LeadFormState } from "@/lib/leads/validate";
 import { STATES } from "@/lib/states";
 import { SOURCES } from "@/lib/types";
+import { controlClass as control, Field, LanguageChoice, Section } from "./form";
 import { buttonClass } from "./ui";
 
 type Values = Record<string, string>;
-
-const control =
-  "w-full rounded-xl border bg-white px-3 text-lg shadow-sm transition placeholder:text-slate-400 focus:border-steel focus:outline-none focus:ring-2 focus:ring-steel/30";
-
-function Field({
-  name,
-  label,
-  value,
-  error,
-  type = "text",
-  inputMode,
-  maxLength,
-  className = "",
-}: {
-  name: string;
-  label: string;
-  value: string;
-  error?: string;
-  type?: string;
-  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
-  maxLength?: number;
-  className?: string;
-}) {
-  return (
-    <label className={`block ${className}`}>
-      <span className="mb-1.5 block text-base font-semibold text-slate-800">{label}</span>
-      <input
-        name={name}
-        type={type}
-        inputMode={inputMode}
-        autoComplete="off"
-        maxLength={maxLength}
-        defaultValue={value}
-        aria-invalid={!!error}
-        className={`${control} h-12 ${error ? "border-red-500 bg-red-50/40" : "border-slate-300"}`}
-      />
-      {error && <span className="mt-1 block text-base font-medium text-red-700">{error}</span>}
-    </label>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <fieldset className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
-      <legend className="sr-only">{title}</legend>
-      <p aria-hidden className="text-sm font-bold uppercase tracking-wider text-steel">
-        {title}
-      </p>
-      {children}
-    </fieldset>
-  );
-}
 
 /** The referral form: add (Danny & Aníbal) or edit (Danny). Checked again on the server. */
 export function LeadForm({
@@ -107,26 +56,7 @@ export function LeadForm({
         <Field {...f("full_name")} label={t.full_name} maxLength={120} />
         <Field {...f("phone")} label={t.phone} type="tel" inputMode="tel" maxLength={20} />
         <Field {...f("email")} label={t.email} type="email" inputMode="email" maxLength={200} />
-        <fieldset>
-          <legend className="mb-1.5 text-base font-semibold text-slate-800">{t.language}</legend>
-          <div className="grid grid-cols-2 gap-3">
-            {(["es", "en"] as const).map((l) => (
-              <label
-                key={l}
-                className="flex h-12 cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-lg shadow-sm transition has-[:checked]:border-navy has-[:checked]:bg-cream-light has-[:checked]:font-semibold"
-              >
-                <input
-                  type="radio"
-                  name="language"
-                  value={l}
-                  defaultChecked={(v.language || "es") === l}
-                  className="h-5 w-5 accent-navy"
-                />
-                {l === "es" ? "Español" : "English"}
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        <LanguageChoice label={t.language} value={v.language} />
       </Section>
 
       <Section title={t.sections.address}>
