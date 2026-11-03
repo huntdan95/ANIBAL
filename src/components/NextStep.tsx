@@ -1,7 +1,9 @@
 import type { Messages } from "@/i18n/messages";
 import { planPings, stageChangeEvent } from "@/lib/notify/plan";
 import { CLOSED_STAGES, STAGES, type Lead, type Stage } from "@/lib/types";
+import { firstName } from "@/lib/notify/render";
 import { SubmitButton } from "./SubmitButton";
+import { buttonClass } from "./ui";
 
 type Action = (fd: FormData) => Promise<void>;
 
@@ -33,7 +35,17 @@ function StageForm({
  * plus a plain note of who will get an email. Closing and manual changes are
  * tucked away so they aren't tapped by accident.
  */
-export function NextStep({ lead, t, setStage }: { lead: Lead; t: Messages; setStage: Action }) {
+export function NextStep({
+  lead,
+  t,
+  setStage,
+  wantsToProceed = false,
+}: {
+  lead: Lead;
+  t: Messages;
+  setStage: Action;
+  wantsToProceed?: boolean;
+}) {
   const n = t.lead.next;
   const referred = Boolean(lead.referrer_id);
 
@@ -58,7 +70,20 @@ export function NextStep({ lead, t, setStage }: { lead: Lead; t: Messages; setSt
         </>
       )}
       {lead.stage === "contacted" && <p className="text-base text-slate-700">⏳ {n.waitingInfo}</p>}
-      {lead.stage === "info_sent" && <p className="text-base font-semibold text-navy">📄 {n.prepareQuote}</p>}
+      {lead.stage === "info_sent" && <p className="text-base font-semibold text-navy">{n.prepareQuote}</p>}
+      {(lead.stage === "contacted" || lead.stage === "info_sent") && (
+        <a
+          href="#cotizaciones"
+          className={buttonClass(lead.stage === "info_sent" ? "primary" : "secondary", "h-13 w-full text-lg")}
+        >
+          {n.postQuote}
+        </a>
+      )}
+      {lead.stage === "quote_sent" && wantsToProceed && (
+        <p className="rounded-xl bg-gold/30 p-3 text-base font-bold text-navy-dark">
+          {n.proceedAlert(firstName(lead.full_name))}
+        </p>
+      )}
       {lead.stage === "quote_sent" && (
         <>
           <StageForm {...go} to="bound" label={n.markBound} />

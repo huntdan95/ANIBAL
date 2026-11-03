@@ -61,3 +61,23 @@ export async function submitIntake(_prev: IntakeFormState, fd: FormData): Promis
   after(() => notify("info_sent", leadId)); // Danny + Aníbal
   redirect("/portal?sent=1");
 }
+
+/** "Quiero seguir adelante": tells Danny. It does NOT buy anything; Danny calls to finish. */
+export async function wantToProceed(quoteId: string) {
+  await requireRole("customer");
+  const supabase = await createClient();
+  // quote_proceed() only works on the caller's own quote (checked in the database).
+  const { data: firstTime, error } = await supabase.rpc("quote_proceed", { p_quote_id: quoteId });
+  if (error) {
+    console.error("quote_proceed failed:", error);
+    redirect("/portal");
+  }
+  if (firstTime) {
+    const { data: quote } = await supabase.from("quotes").select("lead_id").eq("id", quoteId).maybeSingle();
+    if (quote) {
+      const leadId = quote.lead_id as string;
+      after(() => notify("proceed", leadId)); // Danny
+    }
+  }
+  redirect("/portal?proceed=1#cotizaciones");
+}

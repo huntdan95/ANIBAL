@@ -323,6 +323,33 @@ describe("Customer", () => {
   });
 });
 
+describe("quote PDFs in storage", () => {
+  const upload = (leadId: string) =>
+    `insert into storage.objects (bucket_id, name) values ('quotes', '${leadId}/new-quote.pdf') returning name`;
+
+  it("only Danny can upload a quote PDF", async () => {
+    await expect(as(ids.danny, (q) => q(upload(ids.lead1)))).resolves.toBeDefined();
+    await expect(as(ids.anibal, (q) => q(upload(ids.lead1)))).rejects.toThrow(/row-level security/);
+    await expect(as(ids.cust1, (q) => q(upload(ids.lead1)))).rejects.toThrow(/row-level security/);
+  });
+
+  it("only Danny can delete one", async () => {
+    await as(ids.cust1, async (q) => {
+      const res = await q("delete from storage.objects where bucket_id = 'quotes'");
+      expect(res.rowCount).toBe(0);
+    });
+    const left = await db.query("select count(*)::int as n from storage.objects");
+    expect(left.rows[0].n).toBe(2);
+  });
+
+  it("a customer can't open another customer's PDF even by guessing its path", async () => {
+    await as(ids.cust1, async (q) => {
+      const { rows } = await q("select name from storage.objects where name = $1", [`${ids.lead2}/quote.pdf`]);
+      expect(rows).toHaveLength(0);
+    });
+  });
+});
+
 describe("Not signed in", () => {
   it("sees nothing", async () => {
     for (const table of ["leads", "lead_private", "intake", "quotes", "events", "profiles"]) {

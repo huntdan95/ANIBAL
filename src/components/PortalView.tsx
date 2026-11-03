@@ -3,9 +3,11 @@ import { AGENT } from "@/lib/agent";
 import { formatDate } from "@/lib/format";
 import type { Intake } from "@/lib/portal/queries";
 import type { IntakeFormState } from "@/lib/portal/validate";
-import type { Lead } from "@/lib/types";
+import { OPEN_STAGES, type Lead } from "@/lib/types";
 import { firstName } from "@/lib/notify/render";
 import { MailIcon, PhoneIcon } from "./icons";
+import type { Quote } from "@/lib/quotes";
+import { CustomerQuotes } from "./CustomerQuotes";
 import { IntakeForm } from "./IntakeForm";
 import { ProgressBar } from "./ProgressBar";
 import { buttonClass, Card, Notice, PageTitle } from "./ui";
@@ -18,6 +20,9 @@ export function PortalView({
   lang,
   justSent,
   submitIntake,
+  quotes = [],
+  justProceeded = false,
+  proceed,
 }: {
   lead: Lead | null;
   intake: Intake | null;
@@ -25,6 +30,9 @@ export function PortalView({
   lang: Lang;
   justSent: boolean;
   submitIntake: (prev: IntakeFormState, fd: FormData) => Promise<IntakeFormState>;
+  quotes?: Quote[];
+  justProceeded?: boolean;
+  proceed: (quoteId: string) => (fd: FormData) => Promise<void>;
 }) {
   const p = t.portal;
   const contact = (
@@ -87,24 +95,51 @@ export function PortalView({
         </Notice>
       )}
 
+      {justProceeded && <Notice>{t.quotes.proceedThanks}</Notice>}
+
+      {lead.stage === "bound" && (
+        <section className="rounded-2xl border-2 border-gold bg-cream-light p-4 text-center">
+          <p className="font-serif text-2xl text-navy">{p.boundTitle}</p>
+          <p className="mt-1 text-slate-700">{p.boundBody}</p>
+        </section>
+      )}
+
       <Card>
         <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-steel">{p.progressTitle}</h2>
         <ProgressBar lead={lead} t={t} lang={lang} />
       </Card>
 
-      {intake ? (
-        <>
-          <Card>
-            <h2 className="text-sm font-bold uppercase tracking-wider text-steel">{p.quotesTitle}</h2>
+      {(quotes.length > 0 || intake) && (
+        <section
+          id="cotizaciones"
+          className="scroll-mt-24 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm"
+        >
+          <h2 className="text-sm font-bold uppercase tracking-wider text-steel">{p.quotesTitle}</h2>
+          {quotes.length > 0 ? (
+            <CustomerQuotes
+              quotes={quotes}
+              t={t}
+              lang={lang}
+              proceed={proceed}
+              canProceed={OPEN_STAGES.includes(lead.stage)}
+            />
+          ) : (
             <p className="mt-2 text-slate-600">{p.noQuotes}</p>
-          </Card>
+          )}
+        </section>
+      )}
+
+      {intake || quotes.length > 0 ? (
+        <>
           <details className="group rounded-2xl border border-slate-200/80 bg-white shadow-sm">
             <summary className="flex min-h-14 cursor-pointer items-center justify-between gap-3 px-4 py-3">
               <span>
                 <span className="block text-lg font-bold text-navy">{p.editInfo}</span>
-                <span className="block text-sm text-slate-500">
-                  {p.lastSent(formatDate(intake.submitted_at, lang))}
-                </span>
+                {intake && (
+                  <span className="block text-sm text-slate-500">
+                    {p.lastSent(formatDate(intake.submitted_at, lang))}
+                  </span>
+                )}
               </span>
               <span className="inline-block text-steel transition group-open:rotate-180" aria-hidden>
                 ▾

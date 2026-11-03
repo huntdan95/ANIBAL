@@ -4,7 +4,14 @@ import { formatDate, formatPhone } from "@/lib/format";
 import type { LeadFormState } from "@/lib/leads/validate";
 import type { Lead } from "@/lib/types";
 import { MailIcon, PhoneIcon } from "./icons";
+import { planPings } from "@/lib/notify/plan";
+import type { PrivateDetails } from "@/lib/leads/private";
+import type { Intake } from "@/lib/portal/queries";
+import type { Quote } from "@/lib/quotes";
+import { CustomerAnswers } from "./CustomerAnswers";
 import { LeadForm } from "./LeadForm";
+import { PrivateDetailsCard } from "./PrivateDetailsCard";
+import { QuotesPanel } from "./QuotesPanel";
 import { NextStep } from "./NextStep";
 import { ProgressBar } from "./ProgressBar";
 import { buttonClass, Card, Notice } from "./ui";
@@ -17,6 +24,9 @@ export function LeadDetailView({
   notice,
   setStage,
   updateLead,
+  extras,
+  actions,
+  status,
 }: {
   lead: Lead;
   t: Messages;
@@ -24,7 +34,20 @@ export function LeadDetailView({
   notice: { kind: "success" | "error"; text: string } | null;
   setStage: (fd: FormData) => Promise<void>;
   updateLead: (prev: LeadFormState, fd: FormData) => Promise<LeadFormState>;
+  extras: { intake: Intake | null; priv: PrivateDetails | null; quotes: Quote[] };
+  actions: {
+    savePrivate: (fd: FormData) => Promise<void>;
+    startQuoteUpload: () => Promise<{ path: string; token: string } | { error: string }>;
+    finishQuote: (path: string, note: string) => Promise<{ error: string } | void>;
+  };
+  status: { privateSaved: "saved" | "error" | null; quotePosted: boolean };
 }) {
+  const quoteEmailNote = (() => {
+    const who = [
+      ...new Set(planPings("quote_posted", { referred: Boolean(lead.referrer_id) }).map((p) => t.lead.next.who[p.to])),
+    ];
+    return t.lead.next.willEmail(who.join(` ${t.lead.next.who.and} `));
+  })();
   const address = [lead.street, [lead.city, lead.state].filter(Boolean).join(", "), lead.zip]
     .filter(Boolean)
     .join(" · ");
@@ -70,8 +93,22 @@ export function LeadDetailView({
       </Card>
 
       <Card>
-        <NextStep lead={lead} t={t} setStage={setStage} />
+        <NextStep lead={lead} t={t} setStage={setStage} wantsToProceed={extras.quotes.some((q) => q.proceed_at)} />
       </Card>
+
+      <CustomerAnswers intake={extras.intake} t={t} lang={lang} />
+
+      <QuotesPanel
+        quotes={extras.quotes}
+        t={t}
+        lang={lang}
+        justPosted={status.quotePosted}
+        emailNote={quoteEmailNote}
+        startUpload={actions.startQuoteUpload}
+        finish={actions.finishQuote}
+      />
+
+      <PrivateDetailsCard priv={extras.priv} t={t} save={actions.savePrivate} status={status.privateSaved} />
 
       <Card>
         <div className="grid grid-cols-2 gap-2">

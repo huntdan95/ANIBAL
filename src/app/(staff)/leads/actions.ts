@@ -1,12 +1,15 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { requireRole } from "@/lib/auth";
 import { getReferrerId, linkCustomerAccount } from "@/lib/leads/accounts";
+import { validatePrivate } from "@/lib/leads/private";
 import { validateLead, type LeadFormState } from "@/lib/leads/validate";
 import { notify } from "@/lib/notify";
 import { stageChangeEvent } from "@/lib/notify/plan";
+import { isQuotePathFor, newQuotePath, validateQuoteNote } from "@/lib/quotes";
 import { createClient } from "@/lib/supabase/server";
 import { STAGES, type Stage } from "@/lib/types";
 
@@ -110,4 +113,57 @@ export async function setStage(id: string, fd: FormData) {
   if (event) after(() => notify(event, id));
 
   redirect(`/leads/${id}?stage=saved`);
+}
+
+/** Danny-only details: coverage lines, estimated premium, commission, private notes. */
+export async function savePrivate(id: string, fd: FormData) {
+  await requireRole("admin");
+  const { input, errors } = validatePrivate(fd);
+  if (Object.keys(errors).length) redirect(`/leads/${id}?private=error#solo-usted`);
+  const supabase = await createClient();
+  const { error } = await supabase.from("lead_private").upsert({ lead_id: id, ...input });
+  if (error) {
+    console.error("savePrivate failed:", error);
+    redirect(`/leads/${id}?private=error#solo-usted`);
+  }
+  redirect(`/leads/${id}?private=saved#solo-usted`);
+}
+
+/**
+ * Step 1 of posting a quote: a one-time link to upload the PDF straight to
+ * private storage. Made AS Danny, so the storage rules apply.
+ */
+export async function startQuoteUpload(id: string): Promise<{ path: string; token: string } | { error: string }> {
+  await requireRole("admin");
+  const path = newQuotePath(id, randomUUID());
+  const supabase = await createClient();
+  const { data, error } = await supabase.storage.from("quotes").createSignedUploadUrl(path);
+  if (error || !data) {
+    console.error("createSignedUploadUrl failed:", error);
+    return { error: "upload" };
+  }
+  return { path: data.path, token: data.token };
+}
+
+/**
+ * Step 2: after the PDF is uploaded, save the quote. The database moves the lead
+ * to "Cotización enviada"; the customer and Aníbal get their emails.
+ */
+export async function finishQuote(id: string, path: string, rawNote: string): Promise<{ error: string } | void> {
+  await requireRole("admin");
+  const note = validateQuoteNote(rawNote);
+  if (!note) return { error: "note" };
+  if (!isQuotePathFor(id, path)) return { error: "upload" };
+
+  const supabase = await createClient();
+  const { data: exists } = await supabase.storage.from("quotes").exists(path);
+  if (!exists) return { error: "upload" };
+
+  const { error } = await supabase.from("quotes").insert({ lead_id: id, note, pdf_path: path });
+  if (error) {
+    console.error("finishQuote failed:", error);
+    return { error: "upload" };
+  }
+  after(() => notify("quote_posted", id));
+  redirect(`/leads/${id}?quote=posted#cotizaciones`);
 }

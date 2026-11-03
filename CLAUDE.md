@@ -69,12 +69,19 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 - `src/lib/portal/validate.ts` (`validateIntake`) → `src/app/portal/actions.ts` (`submitIntake`) → DB `submit_intake()` RPC (ownership-checked) → `after(notify("info_sent"))`. The lead id comes from the server, never from the form.
 - No DOB / license / VIN / SSN fields (a unit test checks the validator). The privacy note on the form says so.
 
+## Quotes & Danny-only details
+- Danny's lead page (`LeadDetailView.tsx`), top to bottom: progress → `NextStep` (has "📄 Publicar cotización" → `#cotizaciones`, and a "quiere seguir adelante" alert) → `CustomerAnswers` (intake, read-only) → `QuotesPanel` (list + `PostQuoteForm`) → `PrivateDetailsCard` (🔒 coverage lines, est. premium, commission, notes → `lead_private`) → contact → edit form.
+- Posting a quote: `startQuoteUpload` (server, as Danny) makes a one-time signed upload URL for `<lead>/<uuid>.pdf`; the browser uploads straight to Storage (avoids Vercel's 4.5 MB body limit); `finishQuote` checks the path (`isQuotePathFor`), that the file exists, then inserts `quotes` (DB trigger → `quote_sent`) and `after(notify("quote_posted"))`.
+- PDFs open only via `/q/<quote id>` (route handler): RLS-checked select, then a fresh 5-minute signed URL. Never link straight to storage.
+- Customer "Mis cotizaciones" (`CustomerQuotes.tsx`): note, date, PDF, "Quiero seguir adelante" → `wantToProceed` → `quote_proceed()` RPC (first tap only) → `after(notify("proceed"))`. The screen says it doesn't buy anything and Danny will call. The button is hidden once the lead is bound/closed.
+- Portal shows "🎉 ¡Su póliza está activa!" when the stage is `bound`.
+
 ## Pings implementation (`src/lib/notify/`)
 - `plan.ts`: `planPings(event, {referred, addedBy})` decides WHO gets WHICH template (pure, unit-tested). `stageChangeEvent(from, to)` maps Danny's dropdown changes (only contacted/bound/not_bought/not_fit ping).
 - `render.ts`: `renderPing()` builds the email in the recipient's language from `messages.ping.templates`. Customer emails get the 30-day link footer.
 - `channels.ts`: `Channel` interface; only `emailChannel` is in `CHANNELS`. The SMS (Twilio) slot is documented there. Don't build it until Danny asks.
 - `index.ts`: `notify(event, leadId, opts)` loads lead + people with the admin client, makes the customer's invite link, sends. Never throws. Always call inside `after(() => notify(...))` from `next/server`, before `redirect()`.
-- Events still to wire: `quote_posted` + `proceed` (step 7), `lead_added` with `addedBy: null` + `channel` (step 8 public sign-up).
+- Events still to wire: `lead_added` with `addedBy: null` + `channel` (step 8 public sign-up).
 - Pings must never contain dollar amounts (a test checks every template).
 
 ## Code conventions
@@ -100,7 +107,7 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 4. [x] Stages + progress bar + activity feed
 5. [x] Email pings
 6. [x] Customer portal (info form)
-7. [ ] Quote posting + customer quotes page
+7. [x] Quote posting + customer quotes page (+ Danny-only details)
 8. [ ] Public sign-up page
 9. [ ] Scorecard
 
