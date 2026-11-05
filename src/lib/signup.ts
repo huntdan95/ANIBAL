@@ -29,7 +29,9 @@ export function channelSource(slug: string): Source | null {
 }
 
 export type SignupInput = { full_name: string; phone: string; email: string; language: "es" | "en" };
-export type SignupErrors = Partial<Record<keyof SignupInput, "required" | "phone" | "email" | "name">>;
+export type SignupErrorCode = "required" | "phone" | "email" | "name" | "number" | "weeks" | "year";
+/** Contact fields plus the optional "what do you need" follow-ups (weekly_payroll, roof_year, …). */
+export type SignupErrors = Partial<Record<string, SignupErrorCode>>;
 
 export function validateSignup(fd: FormData): { input: SignupInput; errors: SignupErrors; isBot: boolean } {
   const text = (k: string) => String(fd.get(k) ?? "").trim();

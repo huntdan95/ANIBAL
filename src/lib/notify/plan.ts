@@ -26,6 +26,8 @@ export type PlanContext = {
   referred: boolean;
   /** Who added the lead (lead_added only). null = the public sign-up page. */
   addedBy?: "admin" | "referrer" | null;
+  /** lead_added only: they already said what they need insured (public sign-up page) */
+  withInfo?: boolean;
 };
 
 const toDanny = (template: TemplateKey): PlannedPing => ({ to: "danny", template, button: "viewLead" });
@@ -37,7 +39,7 @@ export function planPings(event: PingEvent, ctx: PlanContext): PlannedPing[] {
   switch (event) {
     case "lead_added":
       return [
-        toCustomer("welcome", "sendInfo"),
+        ctx.withInfo ? toCustomer("welcomeInfoSent", "myFile") : toCustomer("welcome", "sendInfo"),
         ...(ctx.addedBy === "referrer" ? [toDanny("newReferral")] : []),
         ...(ctx.addedBy === "admin" ? anibal("addedByDanny") : []),
         // Public sign-up page: through Aníbal's own link, both Danny and Aníbal hear about it.

@@ -8,7 +8,15 @@
  */
 
 /** Values a ping email can mention. Never dollar amounts. */
-export type PingVars = { name: string; first: string; phone: string; place?: string; channel?: string };
+export type PingVars = {
+  name: string;
+  first: string;
+  phone: string;
+  place?: string;
+  channel?: string;
+  /** they already said what they need insured (public sign-up) */
+  withInfo?: boolean;
+};
 
 const es = {
   app: {
@@ -91,12 +99,15 @@ const es = {
     addShort: "Nuevo referido",
     share: {
       title: "Su enlace para referidos",
-      body: "Mándeselo a quien quiera ayudar. La persona pone su nombre, teléfono y correo, y queda como referido suyo.",
+      body: "Mándeselo a quien quiera ayudar. La persona pone sus datos y lo que necesita asegurar, y queda como referido suyo. Usted no tiene que llenar nada.",
+      sms: "Texto",
+      email: "Correo",
+      emailSubject: "Le recomiendo a Danny Hunt de IPT para su seguro",
       whatsapp: "Enviar por WhatsApp",
       copy: "Copiar enlace",
       copied: "¡Copiado!",
       more: "Compartir de otra forma",
-      details: "Ver el enlace y cómo funciona",
+      details: "Ver el enlace y más formas de compartir",
       message: (url: string) =>
         `Hola, le recomiendo a Danny Hunt de IPT para su seguro. Deje sus datos aquí y Danny le ayuda: ${url}`,
     },
@@ -199,7 +210,10 @@ const es = {
     language: "¿En qué idioma prefiere?",
     submit: "Quiero que Danny me ayude",
     sending: "Enviando…",
+    needsOptional: "Opcional: si nos dice qué necesita, Danny puede preparar su cotización más rápido.",
     doneTitle: "¡Listo! Revise su correo.",
+    doneTitleInfo: "¡Listo! Danny recibió su solicitud.",
+    doneBodyInfo: "Le llamará pronto. También le enviamos un correo con un enlace para ver cómo va su seguro.",
     doneBody: "Le enviamos un enlace para que nos cuente qué necesita asegurar. Danny le llamará pronto.",
     doneSpam: "Si no lo ve, revise la carpeta de correo no deseado.",
     privacy: "Solo usamos sus datos para ayudarle con su seguro.",
@@ -211,6 +225,9 @@ const es = {
       phone: "Escriba 10 dígitos, por ejemplo 615 555 0101.",
       email: "Escriba un correo válido.",
       name: "Escriba solo su nombre.",
+      number: "Escriba solo un número.",
+      weeks: "Escriba un número del 0 al 52.",
+      year: "Escriba un año, por ejemplo 2015.",
     },
   },
   quotes: {
@@ -411,12 +428,17 @@ const es = {
         subject: `Nueva inscripción: ${v.name}`,
         lines: [
           `${v.name} se inscribió en la página de IPT${v.channel ? ` (${v.channel})` : ""}.`,
+          ...(v.withInfo ? ["Ya dijo qué necesita asegurar."] : []),
           `Teléfono: ${v.phone}`,
         ],
       }),
       newSignupAnibal: (v: PingVars) => ({
         subject: `Nuevo referido de Aníbal: ${v.name}`,
-        lines: [`${v.name} se inscribió con el enlace de Aníbal.`, `Teléfono: ${v.phone}`],
+        lines: [
+          `${v.name} se inscribió con el enlace de Aníbal.`,
+          ...(v.withInfo ? ["Ya dijo qué necesita asegurar."] : []),
+          `Teléfono: ${v.phone}`,
+        ],
       }),
       signupViaLink: (v: PingVars) => ({
         subject: `${v.name} se inscribió con su enlace`,
@@ -425,6 +447,14 @@ const es = {
       addedByDanny: (v: PingVars) => ({
         subject: `Danny agregó a ${v.name}`,
         lines: [`Danny agregó a ${v.name} a sus referidos. Gracias por la recomendación.`],
+      }),
+      welcomeInfoSent: (v: PingVars) => ({
+        subject: "Recibimos su solicitud – Danny Hunt de IPT",
+        lines: [
+          `Hola, ${v.first}:`,
+          "Gracias. Danny Hunt de IPT recibió lo que necesita asegurar y le llamará pronto.",
+          "Aquí puede ver cómo va su seguro y, cuando esté lista, su cotización.",
+        ],
       }),
       welcome: (v: PingVars) => ({
         subject: "Danny Hunt de IPT le ayudará con su seguro",
@@ -564,12 +594,15 @@ const en: Messages = {
     addShort: "New referral",
     share: {
       title: "Your referral link",
-      body: "Send it to anyone you want to help. They enter their name, phone and email, and they're added as your referral.",
+      body: "Send it to anyone you want to help. They enter their details and what they need insured, and they're added as your referral. You don't have to fill in anything.",
+      sms: "Text",
+      email: "Email",
+      emailSubject: "I recommend Danny Hunt at IPT for your insurance",
       whatsapp: "Send by WhatsApp",
       copy: "Copy link",
       copied: "Copied!",
       more: "Share another way",
-      details: "See the link and how it works",
+      details: "See the link and more ways to share",
       message: (url: string) =>
         `Hi! I recommend Danny Hunt at IPT for your insurance. Leave your details here and Danny will help you: ${url}`,
     },
@@ -672,7 +705,10 @@ const en: Messages = {
     language: "Which language do you prefer?",
     submit: "I want Danny's help",
     sending: "Sending…",
+    needsOptional: "Optional: if you tell us what you need, Danny can prepare your quote faster.",
     doneTitle: "All set! Check your email.",
+    doneTitleInfo: "All set! Danny got your request.",
+    doneBodyInfo: "Danny will call you soon. We also emailed you a link to see how your insurance is going.",
     doneBody: "We sent you a link so you can tell us what you need insured. Danny will call you soon.",
     doneSpam: "If you don't see it, check your spam folder.",
     privacy: "We only use your details to help with your insurance.",
@@ -684,6 +720,9 @@ const en: Messages = {
       phone: "Enter 10 digits, for example 615 555 0101.",
       email: "Enter a valid email.",
       name: "Just your name, please.",
+      number: "Enter just a number.",
+      weeks: "Enter a number from 0 to 52.",
+      year: "Enter a year, for example 2015.",
     },
   },
   quotes: {
@@ -881,11 +920,19 @@ const en: Messages = {
       }),
       newSignup: (v: PingVars) => ({
         subject: `New sign-up: ${v.name}`,
-        lines: [`${v.name} signed up on the IPT page${v.channel ? ` (${v.channel})` : ""}.`, `Phone: ${v.phone}`],
+        lines: [
+          `${v.name} signed up on the IPT page${v.channel ? ` (${v.channel})` : ""}.`,
+          ...(v.withInfo ? ["They already said what they need insured."] : []),
+          `Phone: ${v.phone}`,
+        ],
       }),
       newSignupAnibal: (v: PingVars) => ({
         subject: `New referral from Aníbal: ${v.name}`,
-        lines: [`${v.name} signed up with Aníbal's link.`, `Phone: ${v.phone}`],
+        lines: [
+          `${v.name} signed up with Aníbal's link.`,
+          ...(v.withInfo ? ["They already said what they need insured."] : []),
+          `Phone: ${v.phone}`,
+        ],
       }),
       signupViaLink: (v: PingVars) => ({
         subject: `${v.name} signed up with your link`,
@@ -894,6 +941,14 @@ const en: Messages = {
       addedByDanny: (v: PingVars) => ({
         subject: `Danny added ${v.name}`,
         lines: [`Danny added ${v.name} to your referrals. Thanks for the recommendation.`],
+      }),
+      welcomeInfoSent: (v: PingVars) => ({
+        subject: "We got your request – Danny Hunt from IPT",
+        lines: [
+          `Hi ${v.first},`,
+          "Thank you. Danny Hunt from IPT got what you need insured and will call you soon.",
+          "Here you can see how your insurance is going and, when it's ready, your quote.",
+        ],
       }),
       welcome: (v: PingVars) => ({
         subject: "Danny Hunt from IPT will help you with your insurance",

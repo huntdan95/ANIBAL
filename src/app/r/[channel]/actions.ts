@@ -3,6 +3,7 @@
 import { after } from "next/server";
 import { getReferrerId, linkCustomerAccount } from "@/lib/leads/accounts";
 import { notify } from "@/lib/notify";
+import { asksAboutBusiness, parseIntakeAnswers } from "@/lib/portal/validate";
 import { channelSource, SIGNUP_FLOOD_LIMIT, validateSignup, type SignupErrors } from "@/lib/signup";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { OPEN_STAGES } from "@/lib/types";
@@ -11,14 +12,20 @@ export type SignupState = {
   status: "idle" | "error" | "done";
   errors: SignupErrors;
   message?: "busy" | "failed";
-  values?: Record<string, string>;
+  values?: Record<string, string | string[]>;
+  /** they also said what they need insured (a quote request) */
+  withInfo?: boolean;
 };
 
-const valuesOf = (fd: FormData) =>
-  Object.fromEntries([...fd.entries()].filter(([k, v]) => !k.startsWith("$") && typeof v === "string")) as Record<
-    string,
-    string
-  >;
+const valuesOf = (fd: FormData) => {
+  const out: Record<string, string | string[]> = {};
+  for (const key of new Set(fd.keys())) {
+    if (key.startsWith("$")) continue;
+    const all = fd.getAll(key).map(String);
+    out[key] = key === "needs" ? all : (all[0] ?? "");
+  }
+  return out;
+};
 
 /**
  * Public sign-up (no login). Creates a "Nuevo" lead tagged with the channel,
@@ -30,9 +37,19 @@ export async function signUp(slug: string, _prev: SignupState, fd: FormData): Pr
   const source = channelSource(slug);
   if (!source) return { status: "error", errors: {}, message: "failed" };
 
-  const { input, errors, isBot } = validateSignup(fd);
+  const { input, errors: contactErrors, isBot } = validateSignup(fd);
   if (isBot) return { status: "done", errors: {} }; // look normal, do nothing
+  // Optional: what they need insured (a quote request), same questions as the customer's own form.
+  const { intake, errors: answerErrors } = parseIntakeAnswers(fd);
+  // (parseIntakeAnswers only ever reports "number", "weeks" or "year")
+  const errors = { ...contactErrors, ...answerErrors } as SignupErrors;
   if (Object.keys(errors).length) return { status: "error", errors, values: valuesOf(fd) };
+  const withInfo = intake.needs.length > 0;
+  const business_name = asksAboutBusiness(intake)
+    ? String(fd.get("business_name") ?? "")
+        .trim()
+        .slice(0, 200) || null
+    : null;
 
   const admin = createAdminClient();
 
@@ -48,6 +65,8 @@ export async function signUp(slug: string, _prev: SignupState, fd: FormData): Pr
   }
 
   // Signed up before and still open? Re-send their link instead of making a duplicate.
+  // (Their new answers are NOT saved here: anyone can type any email on a public page,
+  // so only the person with the emailed link can change an existing file.)
   const { data: existing } = await admin
     .from("leads")
     .select("id")
@@ -67,7 +86,7 @@ export async function signUp(slug: string, _prev: SignupState, fd: FormData): Pr
 
   const { data: lead, error } = await admin
     .from("leads")
-    .insert({ ...input, source, referrer_id })
+    .insert({ ...input, business_name, source, referrer_id })
     .select("id")
     .single();
   if (error || !lead) {
@@ -82,6 +101,16 @@ export async function signUp(slug: string, _prev: SignupState, fd: FormData): Pr
   }
 
   const leadId = lead.id as string;
-  after(() => notify("lead_added", leadId, { addedBy: null, source })); // customer welcome + Danny (+ Aníbal)
-  return { status: "done", errors: {} };
+
+  if (withInfo) {
+    // Save what they need and move the lead to "Información enviada" (the database stamps the date
+    // and writes the activity-feed entry).
+    const { error: intakeError } = await admin.from("intake").insert({ lead_id: leadId, ...intake });
+    if (intakeError) console.error("public sign-up: could not save answers:", intakeError);
+    else await admin.from("leads").update({ stage: "info_sent" }).eq("id", leadId);
+  }
+
+  // Customer: welcome (or "we got your request") + Danny (+ Aníbal for his link).
+  after(() => notify("lead_added", leadId, { addedBy: null, source, withInfo }));
+  return { status: "done", errors: {}, withInfo };
 }

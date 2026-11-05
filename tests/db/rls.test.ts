@@ -386,6 +386,34 @@ describe("Not signed in", () => {
     await db.query("rollback");
   });
 
+  it("a quote request through Aníbal's link lands at 'info_sent'; Aníbal sees the lead but not the answers", async () => {
+    await db.query("begin");
+    // what the sign-up page does with the server key
+    const { rows } = await db.query(
+      "insert into public.leads (full_name, phone, email, source, referrer_id) values ('Rosa', '6155550177', 'rosa@example.com', 'anibal', $1) returning id",
+      [ids.anibal],
+    );
+    const id = rows[0].id;
+    await db.query(
+      "insert into public.intake (lead_id, needs, work_type, weekly_payroll) values ($1, '{business,workers}', 'Limpieza', 1800)",
+      [id],
+    );
+    await db.query("update public.leads set stage = 'info_sent' where id = $1", [id]);
+    const lead = (await db.query("select stage, info_sent_at from public.leads where id = $1", [id])).rows[0];
+    expect(lead.stage).toBe("info_sent");
+    expect(lead.info_sent_at).not.toBeNull();
+    const kinds = (await db.query("select kind from public.events where lead_id = $1 order by id", [id])).rows;
+    expect(kinds.map((r) => r.kind)).toEqual(["created", "info_sent"]);
+
+    await db.query("set local role authenticated");
+    await db.query("select set_config('request.jwt.claims', $1, true)", [
+      JSON.stringify({ sub: ids.anibal, role: "authenticated" }),
+    ]);
+    expect((await db.query("select id from leads where id = $1", [id])).rowCount).toBe(1);
+    expect((await db.query("select * from intake where lead_id = $1", [id])).rowCount).toBe(0);
+    await db.query("rollback");
+  });
+
   it("sees nothing", async () => {
     for (const table of ["leads", "lead_private", "intake", "quotes", "events", "profiles"]) {
       await expect(as(null, (q) => q(`select * from ${table}`))).rejects.toThrow(/permission denied/);

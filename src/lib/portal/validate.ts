@@ -48,27 +48,15 @@ function parseNumber(raw: string, min: number, max: number, integer: boolean): n
   return n;
 }
 
-export function validateIntake(
-  fd: FormData,
-  loginEmail: string,
-  now = new Date(),
-): { contact: LeadInput; intake: IntakeInput; errors: IntakeErrors } {
-  const withEmail = new FormData();
-  for (const [k, v] of fd.entries()) withEmail.append(k, v);
-  withEmail.set("email", loginEmail);
-  const { input: contact, errors: contactErrors } = validateLead(withEmail);
-  const errors: IntakeErrors = { ...contactErrors };
-  delete errors.email;
-  // The customer confirms their full address here (the referral itself only needs name, phone, email).
-  if (!contact.street) errors.street = "required";
-  if (!contact.city) errors.city = "required";
-  if (!contact.state) errors.state = "required";
-  if (!contact.zip) errors.zip ??= "required";
-
+/**
+ * The "what do you need insured" answers and their follow-ups. Only the follow-ups for the
+ * boxes that are checked count. Used by the customer's form and by the public sign-up page
+ * (where answering is optional).
+ */
+export function parseIntakeAnswers(fd: FormData, now = new Date()): { intake: IntakeInput; errors: IntakeErrors } {
+  const errors: IntakeErrors = {};
   const picked = fd.getAll("needs").map(String);
   const needs = NEEDS.filter((n) => picked.includes(n));
-  if (needs.length === 0) errors.needs = "pickOne";
-
   const has = (n: Need) => needs.includes(n);
   const forBusiness = has("business") || has("workers");
 
@@ -91,8 +79,34 @@ export function validateIntake(
     vehicle_count: has("vehicle") ? num("vehicle_count", 0, 99, true) : null,
     driver_count: has("vehicle") ? num("driver_count", 0, 99, true) : null,
   };
+  return { intake, errors };
+}
 
-  if (!forBusiness) {
+/** True when the business follow-up (which includes the business name) applies. */
+export const asksAboutBusiness = (intake: IntakeInput) =>
+  intake.needs.includes("business") || intake.needs.includes("workers");
+
+export function validateIntake(
+  fd: FormData,
+  loginEmail: string,
+  now = new Date(),
+): { contact: LeadInput; intake: IntakeInput; errors: IntakeErrors } {
+  const withEmail = new FormData();
+  for (const [k, v] of fd.entries()) withEmail.append(k, v);
+  withEmail.set("email", loginEmail);
+  const { input: contact, errors: contactErrors } = validateLead(withEmail);
+  const { intake, errors: answerErrors } = parseIntakeAnswers(fd, now);
+  const errors: IntakeErrors = { ...contactErrors, ...answerErrors };
+  delete errors.email;
+  // The customer confirms their full address here (the referral itself only needs name, phone, email).
+  if (!contact.street) errors.street = "required";
+  if (!contact.city) errors.city = "required";
+  if (!contact.state) errors.state = "required";
+  if (!contact.zip) errors.zip ??= "required";
+  // On their own form they must say what they need insured.
+  if (intake.needs.length === 0) errors.needs = "pickOne";
+
+  if (!asksAboutBusiness(intake)) {
     // Business name is only asked about in the business part; don't wipe one Aníbal entered.
     delete errors.business_name;
   }

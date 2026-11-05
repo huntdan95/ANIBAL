@@ -30,6 +30,12 @@ describe("who gets which ping", () => {
     ]);
   });
 
+  it("sign-up where they already said what they need → 'we got your request' email instead of 'send your info'", () => {
+    expect(
+      planPings("lead_added", { referred: true, addedBy: null, withInfo: true }).map((p) => `${p.to}:${p.template}`),
+    ).toEqual(["customer:welcomeInfoSent", "danny:newSignupAnibal", "anibal:signupViaLink"]);
+  });
+
   it("Danny marks Contacted → Aníbal", () => {
     expect(who("contacted", true)).toEqual(["anibal:contacted"]);
     expect(who("contacted", false)).toEqual([]);

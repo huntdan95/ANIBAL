@@ -25,6 +25,8 @@ export async function notify(
     source?: Source;
     /** send only to these people (e.g. re-sending a customer's link) */
     only?: Who[];
+    /** public sign-up where they already said what they need insured */
+    withInfo?: boolean;
   } = {},
 ): Promise<void> {
   try {
@@ -36,9 +38,11 @@ export async function notify(
       .single();
     if (error || !lead) throw new Error(`lead ${leadId} not found: ${error?.message}`);
 
-    const plan = planPings(event, { referred: Boolean(lead.referrer_id), addedBy: opts.addedBy }).filter(
-      (p) => !opts.only || opts.only.includes(p.to),
-    );
+    const plan = planPings(event, {
+      referred: Boolean(lead.referrer_id),
+      addedBy: opts.addedBy,
+      withInfo: opts.withInfo,
+    }).filter((p) => !opts.only || opts.only.includes(p.to));
     if (plan.length === 0) return;
 
     const site = env.siteUrl();
@@ -47,6 +51,7 @@ export async function notify(
       first: firstName(lead.full_name),
       phone: formatPhone(lead.phone),
       place: [lead.city, lead.state].filter(Boolean).join(", ") || undefined,
+      withInfo: opts.withInfo,
     };
 
     // Look up each person only if someone in the plan needs them.

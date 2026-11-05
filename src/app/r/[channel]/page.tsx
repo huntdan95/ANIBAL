@@ -32,9 +32,7 @@ export default async function SignupPage({ params }: PageProps<"/r/[channel]">) 
           </li>
         ))}
       </ul>
-      <div className="relative rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-        <SignupForm lang={lang} action={signUp.bind(null, channel)} />
-      </div>
+      <SignupForm lang={lang} action={signUp.bind(null, channel)} />
       <p className="text-center text-base text-slate-600">
         {s.preferCall}{" "}
         <a href={AGENT.phoneHref} className="whitespace-nowrap font-bold text-navy underline">

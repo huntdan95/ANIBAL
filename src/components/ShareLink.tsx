@@ -5,8 +5,8 @@ import { messages, type Lang } from "@/i18n/messages";
 import { buttonClass, Chevron } from "./ui";
 
 /**
- * Aníbal's referral link with one-tap sharing. People who sign up through it
- * are added as his referrals. The share buttons stay in view; the explanation,
+ * Aníbal's referral link with one-tap sharing (WhatsApp, text, email, copy).
+ * People who fill it in are added as his referrals; he doesn't have to type anything. The share buttons stay in view; the explanation,
  * the link itself and other ways to share are folded so his list starts higher.
  */
 export function ShareLink({ url, lang }: { url: string; lang: Lang }) {
@@ -50,15 +50,24 @@ export function ShareLink({ url, lang }: { url: string; lang: Lang }) {
         >
           <span aria-hidden>💬</span> WhatsApp
         </a>
+        <a href={`sms:?&body=${encodeURIComponent(message)}`} className={buttonClass("primary", "w-full px-3")}>
+          <span aria-hidden>📱</span> {t.sms}
+        </a>
+        <a
+          href={`mailto:?subject=${encodeURIComponent(t.emailSubject)}&body=${encodeURIComponent(message)}`}
+          className={buttonClass("secondary", "w-full px-3")}
+        >
+          <span aria-hidden>✉️</span> {t.email}
+        </a>
         <button type="button" onClick={copy} className={buttonClass("secondary", "w-full px-3")} aria-live="polite">
           {copied ? `✓ ${t.copied}` : t.copy}
         </button>
       </div>
+      <p className="mt-2 text-sm text-slate-600">{t.body}</p>
       <details className="mt-2">
         <summary className="flex h-10 cursor-pointer items-center justify-center gap-1.5 text-sm font-semibold text-steel hover:text-navy">
           {t.details} <Chevron />
         </summary>
-        <p className="mt-1 text-slate-700">{t.body}</p>
         <p className="mt-3 select-all break-all rounded-xl bg-white px-3 py-2.5 text-base font-semibold text-navy">
           {url}
         </p>

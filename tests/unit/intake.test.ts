@@ -17,6 +17,21 @@ const contact = {
   language: "es",
 };
 
+describe("optional answers on the public sign-up page", async () => {
+  const { parseIntakeAnswers } = await import("@/lib/portal/validate");
+  it("no boxes checked is fine there (they can answer later)", () => {
+    expect(parseIntakeAnswers(form({})).errors).toEqual({});
+    expect(parseIntakeAnswers(form({})).intake.needs).toEqual([]);
+  });
+  it("checked boxes and their follow-ups are read the same way as the customer's form", () => {
+    const { intake, errors } = parseIntakeAnswers(
+      form({ needs: ["home", "vehicle"], roof_year: "2012", vehicle_count: "2" }),
+    );
+    expect(errors).toEqual({});
+    expect(intake).toMatchObject({ needs: ["vehicle", "home"], roof_year: 2012, vehicle_count: 2 });
+  });
+});
+
 describe("Mi información form", () => {
   it("needs at least one thing to insure", () => {
     expect(validateIntake(form(contact), "juan@example.com").errors.needs).toBe("pickOne");
