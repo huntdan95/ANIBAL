@@ -2,9 +2,12 @@ import type { Messages } from "@/i18n/messages";
 import { COVERAGE_LINES, type PrivateDetails } from "@/lib/leads/private";
 import { controlClass } from "./form";
 import { SubmitButton } from "./SubmitButton";
-import { Notice } from "./ui";
+import { Fold, Notice } from "./ui";
 
-/** Danny-only: coverage lines, estimated premium, commission, private notes. */
+/**
+ * Danny-only: coverage lines, estimated premium, commission, private notes.
+ * Folded by default; the folded row says what's saved. Opens again right after a save.
+ */
 export function PrivateDetailsCard({
   priv,
   t,
@@ -18,26 +21,33 @@ export function PrivateDetailsCard({
 }) {
   const p = t.priv;
   const lines = priv?.coverage_lines ?? [];
+  const saved = [
+    lines.length > 0 && p.parts.lines(lines.length),
+    priv?.est_premium != null && p.parts.premium,
+    priv?.commission != null && p.parts.commission,
+    priv?.notes && p.parts.notes,
+  ].filter((x): x is string => Boolean(x));
   return (
-    <section
+    <Fold
       id="solo-usted"
-      className="scroll-mt-24 rounded-2xl border-2 border-dashed border-navy/25 bg-white p-4 shadow-sm"
+      variant="dashed"
+      open={status !== null}
+      title={
+        <>
+          <span aria-hidden>🔒</span> {p.title}
+        </>
+      }
+      hint={saved.length ? p.savedParts(saved) : p.subtitle}
     >
-      <div className="flex items-center gap-2">
-        <span aria-hidden>🔒</span>
-        <h2 className="text-sm font-bold uppercase tracking-wider text-navy">{p.title}</h2>
-      </div>
-      <p className="text-sm text-slate-500">{p.subtitle}</p>
-
       {status && (
-        <div className="mt-3">
+        <div className="mb-3">
           <Notice kind={status === "saved" ? "success" : "error"}>
             {status === "saved" ? p.saved : t.form.failed}
           </Notice>
         </div>
       )}
 
-      <form action={save} className="mt-4 space-y-4">
+      <form action={save} className="space-y-4">
         <fieldset>
           <legend className="mb-2 text-base font-semibold text-slate-800">{p.coverage}</legend>
           <div className="flex flex-wrap gap-2">
@@ -76,7 +86,7 @@ export function PrivateDetailsCard({
           {p.save}
         </SubmitButton>
       </form>
-    </section>
+    </Fold>
   );
 }
 

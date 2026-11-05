@@ -68,6 +68,26 @@ export function Section({ title, children, hidden }: { title: string; children: 
   );
 }
 
+/**
+ * After a failed save, jump to the first field that needs fixing. Opens any
+ * folded section it's in first, so the error is never hidden.
+ */
+export function focusFirstError(form: HTMLFormElement | null) {
+  const first = form?.querySelector<HTMLElement>('[aria-invalid="true"]');
+  if (!first) return;
+  for (let d = first.closest("details"); d; d = d.parentElement?.closest("details") ?? null) d.open = true;
+  first.scrollIntoView({ behavior: "smooth", block: "center" });
+  first.focus({ preventScroll: true });
+}
+
+/** True when any of these form values has something typed in. */
+export function anyFilled(values: Record<string, unknown>, names: string[]) {
+  return names.some((n) => {
+    const v = values[n];
+    return typeof v === "string" ? v.trim() !== "" : Array.isArray(v) && v.length > 0;
+  });
+}
+
 /** Big Español / English choice. */
 export function LanguageChoice({ label, value }: { label: string; value: string }) {
   return (

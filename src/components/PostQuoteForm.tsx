@@ -58,9 +58,7 @@ export function PostQuoteForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3 rounded-xl bg-cream-light/60 p-3" noValidate>
-      <p className="text-base font-bold text-navy">{t.postTitle}</p>
-
+    <form onSubmit={submit} className="space-y-3" noValidate>
       <label className="block">
         <span className="mb-1.5 block font-semibold text-slate-800">{t.pdfLabel}</span>
         <span

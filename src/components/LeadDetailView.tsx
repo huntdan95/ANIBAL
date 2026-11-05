@@ -14,9 +14,12 @@ import { PrivateDetailsCard } from "./PrivateDetailsCard";
 import { QuotesPanel } from "./QuotesPanel";
 import { NextStep } from "./NextStep";
 import { ProgressBar } from "./ProgressBar";
-import { buttonClass, Card, Notice } from "./ui";
+import { buttonClass, Card, Fold, Notice } from "./ui";
 
-/** Danny's screen for one lead. */
+/**
+ * Danny's screen for one lead. Only what's needed now is open; the rest
+ * (posting a quote when it isn't the next step, Danny-only details, editing) is folded.
+ */
 export function LeadDetailView({
   lead,
   t,
@@ -103,6 +106,7 @@ export function LeadDetailView({
         t={t}
         lang={lang}
         justPosted={status.quotePosted}
+        postOpen={lead.stage === "contacted" || lead.stage === "info_sent"}
         emailNote={quoteEmailNote}
         startUpload={actions.startQuoteUpload}
         finish={actions.finishQuote}
@@ -144,23 +148,9 @@ export function LeadDetailView({
         </dl>
       </Card>
 
-      <details className="group rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-        <summary className="flex h-14 cursor-pointer items-center justify-between px-4 text-lg font-bold text-navy">
-          {t.lead.editContact}
-          <span className="inline-block text-steel transition group-open:rotate-180" aria-hidden>
-            ▾
-          </span>
-        </summary>
-        <div className="px-4 pb-1">
-          <LeadForm
-            lang={lang}
-            action={updateLead}
-            initial={initial}
-            showReferrerBox
-            cancelHref={`/leads/${lead.id}`}
-          />
-        </div>
-      </details>
+      <Fold title={t.lead.editContact} bodyClassName="px-4 pb-1">
+        <LeadForm lang={lang} action={updateLead} initial={initial} showReferrerBox cancelHref={`/leads/${lead.id}`} />
+      </Fold>
     </div>
   );
 }

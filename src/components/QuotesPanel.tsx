@@ -2,14 +2,18 @@ import type { Lang, Messages } from "@/i18n/messages";
 import { formatDate } from "@/lib/format";
 import type { Quote } from "@/lib/quotes";
 import { PostQuoteForm } from "./PostQuoteForm";
-import { Notice } from "./ui";
+import { Fold, Notice } from "./ui";
 
-/** Danny's quotes card: what's been posted, who wants to move forward, and the form to post another. */
+/**
+ * Danny's quotes card: what's been posted, who wants to move forward, and the form to post another.
+ * The form is folded unless posting a quote is the next step.
+ */
 export function QuotesPanel({
   quotes,
   t,
   lang,
   justPosted,
+  postOpen,
   emailNote,
   startUpload,
   finish,
@@ -18,6 +22,8 @@ export function QuotesPanel({
   t: Messages;
   lang: Lang;
   justPosted: boolean;
+  /** start with the post-a-quote form open (it's the next step) */
+  postOpen: boolean;
   emailNote: string;
   startUpload: () => Promise<{ path: string; token: string } | { error: string }>;
   finish: (path: string, note: string) => Promise<{ error: string } | void>;
@@ -59,7 +65,9 @@ export function QuotesPanel({
         </ul>
       )}
       <div className="mt-4">
-        <PostQuoteForm lang={lang} emailNote={emailNote} startUpload={startUpload} finish={finish} />
+        <Fold variant="inset" open={postOpen} title={`📄 ${quotes.length ? q.postAnother : q.postTitle}`}>
+          <PostQuoteForm lang={lang} emailNote={emailNote} startUpload={startUpload} finish={finish} />
+        </Fold>
       </div>
     </section>
   );

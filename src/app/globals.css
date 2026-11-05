@@ -46,3 +46,8 @@ details > summary {
 details > summary::-webkit-details-marker {
   display: none;
 }
+
+/* A fold's ▾ (Chevron in ui.tsx) turns over when its OWN <details> is open, not a parent fold's. */
+details[open] > summary .fold-chevron {
+  transform: rotate(180deg);
+}

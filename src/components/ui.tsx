@@ -23,6 +23,59 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
   );
 }
 
+/** The ▾ on a fold. It turns over only when its own fold is open (globals.css), so folds can sit inside folds. */
+export function Chevron() {
+  return (
+    <span className="fold-chevron inline-block shrink-0 text-steel transition" aria-hidden>
+      ▾
+    </span>
+  );
+}
+
+/**
+ * A card that folds away so long pages stay short: a big tap-to-open title row
+ * with an optional one-line hint of what's inside. Closed unless `open`.
+ * Fields inside a closed fold are still sent with the form.
+ */
+export function Fold({
+  title,
+  hint,
+  open = false,
+  id,
+  variant = "card",
+  bodyClassName,
+  children,
+}: {
+  title: ReactNode;
+  hint?: ReactNode;
+  open?: boolean;
+  id?: string;
+  /** card: a page card · inset: lighter, sits inside another card · dashed: Danny-only details */
+  variant?: "card" | "inset" | "dashed";
+  bodyClassName?: string;
+  children: ReactNode;
+}) {
+  const inset = variant === "inset";
+  const shell = {
+    card: "rounded-2xl border border-slate-200/80 bg-white shadow-sm",
+    inset: "rounded-xl border border-slate-200 bg-cream-light/60",
+    dashed: "rounded-2xl border-2 border-dashed border-navy/25 bg-white shadow-sm",
+  }[variant];
+  const pad = inset ? "px-3" : "px-4";
+  return (
+    <details id={id} open={open} className={`scroll-mt-24 ${shell}`}>
+      <summary className={`flex min-h-14 cursor-pointer items-center justify-between gap-3 py-3 ${pad}`}>
+        <span className="min-w-0">
+          <span className={`block font-bold text-navy ${inset ? "text-base" : "text-lg"}`}>{title}</span>
+          {hint && <span className="line-clamp-2 text-sm text-slate-500">{hint}</span>}
+        </span>
+        <Chevron />
+      </summary>
+      <div className={bodyClassName ?? `${pad} ${inset ? "pb-3" : "pb-4"}`}>{children}</div>
+    </details>
+  );
+}
+
 export function Notice({
   kind = "success",
   children,

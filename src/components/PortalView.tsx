@@ -10,7 +10,7 @@ import type { Quote } from "@/lib/quotes";
 import { CustomerQuotes } from "./CustomerQuotes";
 import { IntakeForm } from "./IntakeForm";
 import { ProgressBar } from "./ProgressBar";
-import { buttonClass, Card, Notice, PageTitle } from "./ui";
+import { buttonClass, Card, Fold, Notice, PageTitle } from "./ui";
 
 /** The customer's page: their progress, "Mi información", "Mis cotizaciones", and Danny's contact info. */
 export function PortalView({
@@ -130,24 +130,13 @@ export function PortalView({
       )}
 
       {intake || quotes.length > 0 ? (
-        <>
-          <details className="group rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-            <summary className="flex min-h-14 cursor-pointer items-center justify-between gap-3 px-4 py-3">
-              <span>
-                <span className="block text-lg font-bold text-navy">{p.editInfo}</span>
-                {intake && (
-                  <span className="block text-sm text-slate-500">
-                    {p.lastSent(formatDate(intake.submitted_at, lang))}
-                  </span>
-                )}
-              </span>
-              <span className="inline-block text-steel transition group-open:rotate-180" aria-hidden>
-                ▾
-              </span>
-            </summary>
-            <div className="px-4 pb-1">{form}</div>
-          </details>
-        </>
+        <Fold
+          title={p.editInfo}
+          hint={intake ? p.lastSent(formatDate(intake.submitted_at, lang)) : undefined}
+          bodyClassName="px-4 pb-1"
+        >
+          {form}
+        </Fold>
       ) : (
         <section className="space-y-3">
           <div>

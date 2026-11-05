@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { messages, type Lang } from "@/i18n/messages";
-import { buttonClass } from "./ui";
+import { buttonClass, Chevron } from "./ui";
 
 /**
  * Aníbal's referral link with one-tap sharing. People who sign up through it
- * are added as his referrals.
+ * are added as his referrals. The share buttons stay in view; the explanation,
+ * the link itself and other ways to share are folded so his list starts higher.
  */
 export function ShareLink({ url, lang }: { url: string; lang: Lang }) {
   const t = messages[lang].leads.share;
@@ -40,10 +41,6 @@ export function ShareLink({ url, lang }: { url: string; lang: Lang }) {
       <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-navy">
         <span aria-hidden>📲</span> {t.title}
       </h2>
-      <p className="mt-1 text-slate-700">{t.body}</p>
-      <p className="mt-3 select-all break-all rounded-xl bg-white px-3 py-2.5 text-base font-semibold text-navy">
-        {url}
-      </p>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <a
           href={`https://wa.me/?text=${encodeURIComponent(message)}`}
@@ -57,13 +54,18 @@ export function ShareLink({ url, lang }: { url: string; lang: Lang }) {
           {copied ? `✓ ${t.copied}` : t.copy}
         </button>
       </div>
-      <button
-        type="button"
-        onClick={shareOther}
-        className="mt-2 h-10 w-full text-sm font-semibold text-steel hover:text-navy"
-      >
-        {t.more}
-      </button>
+      <details className="mt-2">
+        <summary className="flex h-10 cursor-pointer items-center justify-center gap-1.5 text-sm font-semibold text-steel hover:text-navy">
+          {t.details} <Chevron />
+        </summary>
+        <p className="mt-1 text-slate-700">{t.body}</p>
+        <p className="mt-3 select-all break-all rounded-xl bg-white px-3 py-2.5 text-base font-semibold text-navy">
+          {url}
+        </p>
+        <button type="button" onClick={shareOther} className={buttonClass("secondary", "mt-3 w-full px-3")}>
+          {t.more}
+        </button>
+      </details>
     </section>
   );
 }
