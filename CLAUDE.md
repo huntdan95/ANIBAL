@@ -88,7 +88,8 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 
 ## Gotchas
 - Staff pages have `loading.tsx`, so `redirect()` from `requireRole` arrives inside a streamed 200 response (meta refresh + `NEXT_REDIRECT`), not as a 307. No page data is sent. Don't "fix" this by removing the loading state.
-- Live status: Danny's Supabase project (`hvexxmekxifyvcnrkmiz`) has all migrations loaded, and magic-link sign-in is confirmed working from a local `npm run dev` against it (so `generateLink` + `verifyOtp({ type: "magiclink" })` is fine). Not yet confirmed live: quote PDF upload to Storage, Resend delivery (no domain yet), Vercel deploy. Local testing uses no `RESEND_API_KEY`, so emails print in the terminal.
+- Deployed: Vercel (Hobby), imported from GitHub `huntdan95/ANIBAL` `main` → every push to `main` redeploys automatically. Danny signed in on his phone on the live site.
+- Live status: Danny's Supabase project (`hvexxmekxifyvcnrkmiz`) has all migrations loaded, and magic-link sign-in is confirmed working from a local `npm run dev` against it (so `generateLink` + `verifyOtp({ type: "magiclink" })` is fine). Not yet confirmed live: quote PDF upload to Storage, Resend delivery to anyone but Danny (no verified domain yet). Local testing uses no `RESEND_API_KEY`, so emails print in the terminal.
 - Known small gaps (fine for v1, don't build unless asked): no rate limit on the login-link form; the lead list filters in memory (fine for hundreds of leads).
 
 ## Pings implementation (`src/lib/notify/`)
