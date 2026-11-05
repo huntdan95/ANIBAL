@@ -14,7 +14,7 @@ export async function requestLoginLink(_prev: LoginState, formData: FormData): P
     await sendLoginLink(email, await getLang());
   } catch (err) {
     // Show the same "check your email" message either way; log for Danny.
-    console.error("Login link failed:", err);
+    console.error("\n[login] Sign-in link NOT sent:", err instanceof Error ? err.message : err, "\n");
   }
   return { status: "sent" };
 }

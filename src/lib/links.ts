@@ -76,9 +76,16 @@ export async function sendLoginLink(rawEmail: string, lang: Lang): Promise<void>
   const admin = createAdminClient();
 
   const profile = await admin.from("profiles").select("id").eq("email", email).maybeSingle();
+  // A failed lookup (wrong Supabase URL/key, database not loaded, network) must show up in the
+  // server log, not look like "not registered". The visitor still sees the same message.
+  if (profile.error) throw new Error(`Could not look up accounts in Supabase: ${describe(profile.error)}`);
   if (!profile.data) {
     const staff = await admin.from("staff").select("email").eq("email", email).maybeSingle();
-    if (!staff.data) return; // not registered: silently do nothing
+    if (staff.error) throw new Error(`Could not read the staff list in Supabase: ${describe(staff.error)}`);
+    if (!staff.data) {
+      console.log(`[login] no account or staff entry for ${email}; no link sent`);
+      return; // not registered: silently do nothing
+    }
     await ensureAccount(email);
   }
 
@@ -92,4 +99,9 @@ export async function sendLoginLink(rawEmail: string, lang: Lang): Promise<void>
     signature: t.email.signature,
   });
   await sendEmail({ to: email, subject: t.email.login.subject, text, html });
+}
+
+/** Supabase errors carry the useful part in different fields; show all of it. */
+function describe(e: { message?: string; details?: string; hint?: string; code?: string }): string {
+  return [e.code, e.message, e.details, e.hint].filter(Boolean).join(" | ");
 }
