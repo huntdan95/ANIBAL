@@ -103,6 +103,35 @@ You can change your own language with the ES/EN button at the top of the app.
 
 ---
 
+## Test it on your own computer first (no email or Vercel needed)
+
+When there's no Resend key, the app **prints every email in the PowerShell window** instead of sending it,
+sign-in links included. So you can try every role yourself before setting up email or a domain.
+
+You need: Part 1 done (your Supabase project with the two database files loaded), plus Node.js and Git on your PC.
+
+1. Open PowerShell and go to the folder: `cd C:\Apps\ANIBAL`
+2. Get the code. If the folder is empty: `git clone https://github.com/huntdan95/ANIBAL.git .` (note the dot at the end).
+   If the code is already there: `git pull`
+3. Install the pieces it uses: `npm install`
+4. Make your settings file: `Copy-Item .env.example .env.local`, then `notepad .env.local`. Fill in the three Supabase
+   lines (Part 1, step 4). Leave `RESEND_API_KEY` empty and keep `NEXT_PUBLIC_SITE_URL=http://localhost:3000`. Save and close.
+5. Start it: `npm run dev`. When it says **Ready**, open **http://localhost:3000** in your browser.
+6. **Sign in as you:** type danny@go-ipt.com and tap the button. In the PowerShell window, a box starting
+   `EMAIL (not sent…)` appears. Copy the link in it (it starts with `http://localhost:3000/auth/confirm`), paste it into
+   your browser, and tap **Entrar**.
+7. **Sign in as someone else at the same time:** use a private/incognito window (each window is one person):
+   - **Aníbal:** type anibalperez1000@gmail.com and use the link from PowerShell the same way.
+   - **A customer:** as Danny or Aníbal, add a referral with any email (even a made-up one like prueba@example.com).
+     Its welcome email, with the customer's link, prints in PowerShell. Open that link in another private window.
+8. Then follow Part 4 below from step 4 (customer sends info → you post a quote → "Quiero seguir adelante" →
+   mark it bound), and try `http://localhost:3000/r/radio` and `http://localhost:3000/r/anibal`.
+
+To stop the app, press **Ctrl+C** in PowerShell. Nothing here sends a real email; everything you add is saved in your
+real Supabase database, so delete test leads afterwards (Supabase → Table Editor → `leads`).
+
+---
+
 ## Part 3: Put it online (Vercel, about 15 minutes)
 
 1. Go to [vercel.com](https://vercel.com) → **Sign Up** → **Continue with GitHub**.
