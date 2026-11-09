@@ -249,6 +249,23 @@ on conflict (email) do update set role = excluded.role;
 Then sign in with the new email. Also update the file `supabase/migrations/20261103000200_staff.sql`
 so the code matches.
 
+## Signing in with a different email
+If sign-in links reach your work email late (for example, held in quarantine), you can get them at another
+address instead. Your account, the emails the app sends you, and the contact details customers see all stay
+on your work email. Only the sign-in links change.
+
+In Supabase **SQL Editor**, run (with your other email, all lowercase):
+
+```sql
+alter table public.staff
+  add column if not exists login_email text unique check (login_email = lower(login_email));
+update public.staff set login_email = 'your-other-email@example.com' where email = 'danny@go-ipt.com';
+```
+
+(The first statement is the file `supabase/migrations/20261109000400_staff_login_email.sql`.)
+From then on, typing either email on the sign-in page sends the link to the other address. To undo it, run
+`update public.staff set login_email = null where email = 'danny@go-ipt.com';`
+
 ---
 
 ## How sign-in works

@@ -18,7 +18,7 @@ Next 16 has breaking changes vs. older training data: read `node_modules/next/di
 | `referrer` | Aníbal (anibalperez1000@gmail.com) | Add referrals; see ONLY leads he referred + stage dates + feed for those. NEVER premiums, commission, quote PDFs/notes, private notes, customer payroll answers. Cannot edit leads. |
 | `customer` | Everyone else | Only their own lead, own intake answers, own quotes/PDFs. |
 
-Everyone signs in with an email magic link, with no passwords. Staff emails live in `public.staff` (migration `..._staff.sql`). Public sign-ups are disabled in Supabase; the server creates customer accounts.
+Everyone signs in with an email magic link, with no passwords. Staff emails live in `public.staff` (migration `..._staff.sql`). Staff can also have a `login_email` (set in the SQL Editor, never committed: the repo is public): sign-in links go there, whichever of the two emails is typed, but the account, Danny's pings and every contact detail stay on `email`. Danny uses this because his work email quarantines the links. Public sign-ups are disabled in Supabase; the server creates customer accounts.
 
 ## Stages
 `new` Nuevo → `contacted` Contactado (Danny) → `info_sent` Información enviada (auto when customer submits) → `quote_sent` Cotización enviada (auto when Danny posts a quote) → `bound` Póliza activa (Danny). Closed: `not_bought` No compró, `not_fit` No califica.
@@ -59,7 +59,7 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 - The app sends ALL emails itself via Resend (`src/lib/email`), including sign-in links, never Supabase's mailer. Links come from `auth.admin.generateLink()` → `hashed_token` → `verifyOtp({ type: "magiclink", token_hash })`.
 - Login link → `/auth/confirm?token_hash=…` shows an "Entrar" button (POST) so email link scanners can't burn the one-time token.
 - Customer 30-day link → `/i/<token>` (sha256 stored in `invites`); each tap mints a fresh session and opens `/portal`.
-- Login page only emails existing accounts or staff emails, and shows the same message either way.
+- Login page only emails existing accounts or staff emails, and shows the same message either way. Staff are matched first (`staffSignIn` in `src/lib/login.ts`, reads `staff` with `*` so it works before `login_email` exists), so a sign-in address beats a test customer account with that email. A `login_email` never creates or becomes an account; the link is for the account on `staff.email`.
 - `createClient()` (`src/lib/supabase/server.ts`) acts as the signed-in user under RLS, so use it by default. `createAdminClient()` bypasses RLS: server-only, and only for account/link creation, the public sign-up and email recipient lookups.
 - Guard every page/action with `requireRole(...)` from `src/lib/auth.ts`.
 

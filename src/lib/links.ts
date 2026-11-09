@@ -4,6 +4,7 @@ import { messages, type Lang } from "@/i18n/messages";
 import { sendEmail } from "@/lib/email/send";
 import { renderEmail } from "@/lib/email/template";
 import { env } from "@/lib/env";
+import { staffSignIn } from "@/lib/login";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /** How long a customer's email link keeps working. */
@@ -70,26 +71,33 @@ export async function makeSignInToken(email: string): Promise<string> {
  * The login page. Emails a 1-hour sign-in link, but only to people who
  * already have an account (customers) or are on the staff list (Danny, Aníbal).
  * The page shows the same message either way so it doesn't reveal who's registered.
+ * Staff with a sign-in address (staff.login_email) get the link there, whichever
+ * of their two emails they type; their account stays on their contact email.
  */
 export async function sendLoginLink(rawEmail: string, lang: Lang): Promise<void> {
   const email = normalizeEmail(rawEmail);
   const admin = createAdminClient();
 
-  const profile = await admin.from("profiles").select("id").eq("email", email).maybeSingle();
+  // Staff first, so a sign-in address wins over any test customer account with that email.
+  // `*` keeps this working before the login_email column exists. The list has two rows.
   // A failed lookup (wrong Supabase URL/key, database not loaded, network) must show up in the
   // server log, not look like "not registered". The visitor still sees the same message.
-  if (profile.error) throw new Error(`Could not look up accounts in Supabase: ${describe(profile.error)}`);
-  if (!profile.data) {
-    const staff = await admin.from("staff").select("email").eq("email", email).maybeSingle();
-    if (staff.error) throw new Error(`Could not read the staff list in Supabase: ${describe(staff.error)}`);
-    if (!staff.data) {
+  const staff = await admin.from("staff").select("*");
+  if (staff.error) throw new Error(`Could not read the staff list in Supabase: ${describe(staff.error)}`);
+  let target = staffSignIn(staff.data ?? [], email);
+  if (target) {
+    await ensureAccount(target.account);
+  } else {
+    const profile = await admin.from("profiles").select("id").eq("email", email).maybeSingle();
+    if (profile.error) throw new Error(`Could not look up accounts in Supabase: ${describe(profile.error)}`);
+    if (!profile.data) {
       console.log(`[login] no account or staff entry for ${email}; no link sent`);
       return; // not registered: silently do nothing
     }
-    await ensureAccount(email);
+    target = { account: email, sendTo: email };
   }
 
-  const tokenHash = await makeSignInToken(email);
+  const tokenHash = await makeSignInToken(target.account);
   const url = `${env.siteUrl()}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}`;
   const t = messages[lang];
   const { text, html } = renderEmail({
@@ -98,7 +106,7 @@ export async function sendLoginLink(rawEmail: string, lang: Lang): Promise<void>
     footer: [t.email.login.ignore],
     signature: t.email.signature,
   });
-  await sendEmail({ to: email, subject: t.email.login.subject, text, html });
+  await sendEmail({ to: target.sendTo, subject: t.email.login.subject, text, html });
 }
 
 /** Supabase errors carry the useful part in different fields; show all of it. */

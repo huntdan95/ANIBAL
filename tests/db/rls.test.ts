@@ -80,6 +80,29 @@ describe("roles come from the staff list", () => {
     expect(role[ids.cust1]).toBe("customer");
     expect(role[ids.cust2]).toBe("customer");
   });
+
+  it("a sign-in address (staff.login_email) only says where links go: it never makes an account staff", async () => {
+    await db.query("update public.staff set login_email = 'danny.personal@example.com' where role = 'admin'");
+    const other = await createUser(db, "danny.personal@example.com");
+    try {
+      const { rows } = await db.query("select id, role from public.profiles where id = any($1)", [[ids.danny, other]]);
+      const role = Object.fromEntries(rows.map((r) => [r.id, r.role]));
+      expect(role[ids.danny]).toBe("admin");
+      expect(role[other]).toBe("customer");
+      // lowercase only, and one person per address
+      await expect(
+        db.query("update public.staff set login_email = 'Danny.Personal@Example.com' where role = 'admin'"),
+      ).rejects.toThrow(/check/);
+      await expect(
+        db.query("update public.staff set login_email = 'danny.personal@example.com' where role = 'referrer'"),
+      ).rejects.toThrow(/unique|duplicate/);
+      // still unreadable through the API
+      await expect(as(ids.danny, (q) => q("select login_email from staff"))).rejects.toThrow(/permission denied/);
+    } finally {
+      await db.query("delete from auth.users where id = $1", [other]);
+      await db.query("update public.staff set login_email = null");
+    }
+  });
 });
 
 describe("Danny (admin)", () => {
