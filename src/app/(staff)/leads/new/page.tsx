@@ -20,7 +20,6 @@ export default async function NewLeadPage() {
         lang={lang}
         action={createLead}
         initial={{ state: "TN", language: "es", source: isAnibal ? "anibal" : "" }}
-        showReferrerBox={!isAnibal}
         cancelHref="/leads"
       />
     </div>

@@ -53,7 +53,7 @@ begin
                             quote_sent_at, bound_at, is_example)
   values ('EJEMPLO – Carlos Ramírez', '7065550103', 'ejemplo.carlos@example.com', '300 Example Rd',
           'Dalton', 'GA', '30720', 'en',
-          'Home and two cars.', 'radio', null, 'bound',
+          'Home and two cars.', 'radio', v_anibal, 'bound',
           now() - interval '30 days', now() - interval '29 days', now() - interval '27 days',
           now() - interval '24 days', now() - interval '20 days', true)
   returning id into l3;

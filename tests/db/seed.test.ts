@@ -44,17 +44,21 @@ describe("EJEMPLO seed data", () => {
     expect(rows[0].age).toBe(3);
   });
 
-  it("Danny sees all 3; Aníbal sees only his 2 and none of the money", async () => {
+  it("Danny and Aníbal both see all 3 (every lead is Aníbal's); Aníbal sees none of the money", async () => {
     await as(db, danny, async (q) => {
       expect((await q("select id from leads")).rowCount).toBe(3);
       expect((await q("select * from lead_private")).rowCount).toBe(2);
     });
     await as(db, anibal, async (q) => {
       const { rows } = await q("select full_name from leads order by full_name");
-      expect(rows.map((r) => r.full_name)).toEqual(["EJEMPLO – Juan Pérez", "EJEMPLO – María López"]);
+      expect(rows.map((r) => r.full_name)).toEqual([
+        "EJEMPLO – Carlos Ramírez",
+        "EJEMPLO – Juan Pérez",
+        "EJEMPLO – María López",
+      ]);
       expect((await q("select * from lead_private")).rowCount).toBe(0);
       expect((await q("select * from intake")).rowCount).toBe(0);
-      expect((await q("select distinct lead_id from events")).rowCount).toBe(2);
+      expect((await q("select distinct lead_id from events")).rowCount).toBe(3);
     });
   });
 

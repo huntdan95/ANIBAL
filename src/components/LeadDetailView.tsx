@@ -66,7 +66,6 @@ export function LeadDetailView({
     language: lead.language,
     needs_notes: lead.needs_notes ?? "",
     source: lead.source ?? "",
-    referred_by_anibal: lead.referrer_id ? "on" : "",
   };
 
   return (
@@ -135,11 +134,6 @@ export function LeadDetailView({
           </Item>
           {address && <Item label={t.lead.address}>{address}</Item>}
           {lead.source && <Item label={t.leads.heardVia}>{t.source[lead.source]}</Item>}
-          {lead.referrer_id && (
-            <p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-cream-light px-3 py-1 text-sm font-bold text-gold-dark">
-              ✓ {t.lead.referredBy}
-            </p>
-          )}
           {lead.needs_notes && (
             <Item label={t.lead.needs}>
               <span className="whitespace-pre-line">{lead.needs_notes}</span>
@@ -149,7 +143,7 @@ export function LeadDetailView({
       </Card>
 
       <Fold title={t.lead.editContact} bodyClassName="px-4 pb-1">
-        <LeadForm lang={lang} action={updateLead} initial={initial} showReferrerBox cancelHref={`/leads/${lead.id}`} />
+        <LeadForm lang={lang} action={updateLead} initial={initial} cancelHref={`/leads/${lead.id}`} />
       </Fold>
     </div>
   );

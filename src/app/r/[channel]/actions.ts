@@ -81,8 +81,8 @@ export async function signUp(slug: string, _prev: SignupState, fd: FormData): Pr
     return { status: "done", errors: {} };
   }
 
-  // Signed up through Aníbal's own link: credit the referral to him.
-  const referrer_id = source === "anibal" ? await getReferrerId() : null;
+  // Every lead is Aníbal's, whichever link they signed up with (radio, newsletter, his own link…).
+  const referrer_id = await getReferrerId();
 
   const { data: lead, error } = await admin
     .from("leads")
@@ -110,7 +110,7 @@ export async function signUp(slug: string, _prev: SignupState, fd: FormData): Pr
     else await admin.from("leads").update({ stage: "info_sent" }).eq("id", leadId);
   }
 
-  // Customer: welcome (or "we got your request") + Danny (+ Aníbal for his link).
+  // Customer: welcome (or "we got your request") + Danny + Aníbal.
   after(() => notify("lead_added", leadId, { addedBy: null, source, withInfo }));
   return { status: "done", errors: {}, withInfo };
 }

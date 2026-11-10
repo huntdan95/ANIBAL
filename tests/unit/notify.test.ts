@@ -3,8 +3,8 @@ import { messages, type Lang } from "@/i18n/messages";
 import { planPings, stageChangeEvent, type PingEvent, type TemplateKey } from "@/lib/notify/plan";
 import { firstName, renderPing } from "@/lib/notify/render";
 
-const who = (event: PingEvent, referred: boolean, addedBy?: "admin" | "referrer" | null) =>
-  planPings(event, { referred, addedBy }).map((p) => `${p.to}:${p.template}`);
+const who = (event: PingEvent, referred: boolean, addedBy?: "admin" | "referrer" | null, viaAnibalLink?: boolean) =>
+  planPings(event, { referred, addedBy, viaAnibalLink }).map((p) => `${p.to}:${p.template}`);
 
 const vars = { name: "Juan Pérez", first: "Juan", phone: "(615) 555-0101", place: "Nashville, TN" };
 
@@ -13,17 +13,19 @@ describe("who gets which ping", () => {
     expect(who("lead_added", true, "referrer")).toEqual(["customer:welcome", "danny:newReferral"]);
   });
 
-  it("Danny adds a referral for Aníbal → customer welcome + Aníbal hears about it", () => {
+  it("Danny adds a lead (every lead is Aníbal's) → customer welcome + Aníbal hears about it", () => {
     expect(who("lead_added", true, "admin")).toEqual(["customer:welcome", "anibal:addedByDanny"]);
     expect(who("lead_added", false, "admin")).toEqual(["customer:welcome"]);
   });
 
-  it("public sign-up → customer welcome + Danny", () => {
+  it("radio / newsletter / magazine sign-up → customer welcome + Danny + Aníbal (it's his lead too)", () => {
+    expect(who("lead_added", true, null)).toEqual(["customer:welcome", "danny:newSignup", "anibal:signupChannel"]);
+    // only if Aníbal's account is missing does he get nothing
     expect(who("lead_added", false, null)).toEqual(["customer:welcome", "danny:newSignup"]);
   });
 
-  it("sign-up through Aníbal's own link → customer welcome + Danny + Aníbal", () => {
-    expect(who("lead_added", true, null)).toEqual([
+  it("sign-up through Aníbal's own link → customer welcome + Danny + Aníbal, with 'your link' wording", () => {
+    expect(who("lead_added", true, null, true)).toEqual([
       "customer:welcome",
       "danny:newSignupAnibal",
       "anibal:signupViaLink",
@@ -32,7 +34,9 @@ describe("who gets which ping", () => {
 
   it("sign-up where they already said what they need → 'we got your request' email instead of 'send your info'", () => {
     expect(
-      planPings("lead_added", { referred: true, addedBy: null, withInfo: true }).map((p) => `${p.to}:${p.template}`),
+      planPings("lead_added", { referred: true, addedBy: null, withInfo: true, viaAnibalLink: true }).map(
+        (p) => `${p.to}:${p.template}`,
+      ),
     ).toEqual(["customer:welcomeInfoSent", "danny:newSignupAnibal", "anibal:signupViaLink"]);
   });
 
@@ -94,6 +98,19 @@ describe("the messages", () => {
     expect(render("quoteSent", "es", "anibal").subject).toBe("Danny le envió la cotización a Juan Pérez");
     expect(render("infoSentAnibal", "es", "anibal").subject).toBe("Juan Pérez envió su información");
     expect(render("boundAnibal", "es", "anibal").subject).toBe("Juan Pérez ya tiene su póliza");
+  });
+
+  it("tell Aníbal which page a sign-up came from", () => {
+    const m = renderPing(
+      { to: "anibal", template: "signupChannel", button: "myReferrals" },
+      "es",
+      {
+        ...vars,
+        channel: "Radio",
+      },
+      "https://x",
+    );
+    expect(m.subject).toBe("Juan Pérez se inscribió (Radio)");
   });
 
   it("come out in the recipient's language", () => {

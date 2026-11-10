@@ -42,6 +42,7 @@ export async function notify(
       referred: Boolean(lead.referrer_id),
       addedBy: opts.addedBy,
       withInfo: opts.withInfo,
+      viaAnibalLink: opts.source === "anibal",
     }).filter((p) => !opts.only || opts.only.includes(p.to));
     if (plan.length === 0) return;
 

@@ -22,9 +22,8 @@ export async function createLead(_prev: LeadFormState, fd: FormData): Promise<Le
   const { input, errors } = validateLead(fd);
   if (Object.keys(errors).length) return { status: "error", errors, message: "fixErrors", values: rawValues(fd) };
 
-  let referrer_id: string | null = null;
-  if (profile.role === "referrer") referrer_id = profile.id;
-  else if (fd.get("referred_by_anibal") === "on") referrer_id = await getReferrerId();
+  // Every lead is Aníbal's, including the ones Danny adds.
+  const referrer_id = profile.role === "referrer" ? profile.id : await getReferrerId();
 
   // Inserted AS the signed-in person, so the database rules apply
   // (Aníbal's referrals are always "New" and credited to him).
@@ -45,7 +44,7 @@ export async function createLead(_prev: LeadFormState, fd: FormData): Promise<Le
     console.error("Could not create the customer's account:", err);
   }
 
-  // Customer welcome email + ping to Danny (or to Aníbal if Danny added his referral).
+  // Customer welcome email + ping to Danny (or to Aníbal when Danny added it).
   const leadId = data.id;
   const addedBy = profile.role === "referrer" ? "referrer" : "admin";
   after(() => notify("lead_added", leadId, { addedBy }));
@@ -63,8 +62,8 @@ export async function updateLead(id: string, _prev: LeadFormState, fd: FormData)
   const { data: before } = await supabase.from("leads").select("email, referrer_id").eq("id", id).maybeSingle();
   if (!before) return { status: "error", errors: {}, message: "failed", values: rawValues(fd) };
 
-  const wantsReferrer = fd.get("referred_by_anibal") === "on";
-  const referrer_id = wantsReferrer ? (before.referrer_id ?? (await getReferrerId())) : null;
+  // Every lead is Aníbal's: an older lead saved before that rule gets credited to him now.
+  const referrer_id = before.referrer_id ?? (await getReferrerId());
 
   const { error } = await supabase
     .from("leads")

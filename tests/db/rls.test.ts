@@ -11,7 +11,9 @@
  */
 import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { as as asIn, createUser, freshDatabase, type Q } from "./helpers";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { as as asIn, createUser, freshDatabase, root, type Q } from "./helpers";
 
 let db: Client;
 const ids = {} as Record<"danny" | "anibal" | "cust1" | "cust2" | "lead1" | "lead2" | "quote1" | "quote2", string>;
@@ -39,7 +41,9 @@ beforeAll(async () => {
       )
     ).rows[0].id;
   ids.lead1 = await lead("Juan Pérez", "cliente1@example.com", "anibal", ids.anibal, ids.cust1); // Aníbal's referral
-  ids.lead2 = await lead("Ana Gómez", "cliente2@example.com", "radio", null, ids.cust2); // radio lead
+  // A lead with no referrer: the app credits every lead to Aníbal now, but the database must still
+  // keep anything not credited to him out of his sight.
+  ids.lead2 = await lead("Ana Gómez", "cliente2@example.com", "radio", null, ids.cust2);
 
   for (const l of [ids.lead1, ids.lead2]) {
     await db.query(
@@ -243,6 +247,32 @@ describe("Aníbal (referrer)", () => {
   });
 });
 
+describe("every lead is Aníbal's (Nov 10 update)", () => {
+  it("credits older leads that had no referrer to Aníbal, and is safe to run again", async () => {
+    const sql = readFileSync(path.join(root, "supabase/migrations/20261110000500_every_lead_anibal.sql"), "utf8");
+    await db.query("begin");
+    try {
+      await db.query(sql);
+      await db.query(sql);
+      const { rows } = await db.query("select id, referrer_id from public.leads where id = any($1)", [
+        [ids.lead1, ids.lead2],
+      ]);
+      expect(rows.every((r) => r.referrer_id === ids.anibal)).toBe(true);
+      // ...and he can now see it, but still none of the money or answers
+      await db.query("set local role authenticated");
+      await db.query("select set_config('request.jwt.claims', $1, true)", [
+        JSON.stringify({ sub: ids.anibal, role: "authenticated" }),
+      ]);
+      expect(idsOf((await db.query("select id from leads")).rows)).toEqual([ids.lead1, ids.lead2].sort());
+      expect((await db.query("select * from lead_private")).rowCount).toBe(0);
+      expect((await db.query("select * from intake")).rowCount).toBe(0);
+      expect((await db.query("select * from quotes")).rowCount).toBe(0);
+    } finally {
+      await db.query("rollback");
+    }
+  });
+});
+
 describe("Customer", () => {
   it("sees only their own lead, answers, quotes and PDFs", async () => {
     await as(ids.cust1, async (q) => {
@@ -391,7 +421,7 @@ describe("Not signed in", () => {
     await db.query("rollback");
   });
 
-  it("someone who signs up through Aníbal's link shows up on Aníbal's list; other sign-ups don't", async () => {
+  it("a sign-up credited to Aníbal shows up on his list; one with no referrer doesn't", async () => {
     await db.query("begin");
     const mine = await db.query(
       "insert into public.leads (full_name, phone, email, source, referrer_id) values ('Rosa', '6155550177', 'rosa@example.com', 'anibal', $1) returning id",

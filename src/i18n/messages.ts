@@ -146,7 +146,6 @@ const es = {
     address: "Dirección",
     language: "Idioma",
     needs: "¿Qué necesita?",
-    referredBy: "Referido por Aníbal",
     addedOn: (d: string) => `Agregado el ${d}`,
     editContact: "Editar información de contacto",
     call: "Llamar",
@@ -315,7 +314,6 @@ const es = {
     needsHint: "Por ejemplo: seguro para sus trabajadores, su camioneta, su casa…",
     source: "¿Cómo se enteró de IPT?",
     chooseOne: "Escoja uno",
-    referredByAnibal: "Referido por Aníbal",
     sections: {
       person: "La persona",
       address: "Dirección (opcional)",
@@ -443,6 +441,10 @@ const es = {
       signupViaLink: (v: PingVars) => ({
         subject: `${v.name} se inscribió con su enlace`,
         lines: [`${v.name} llenó sus datos con su enlace. Danny le va a ayudar. ¡Gracias por la recomendación!`],
+      }),
+      signupChannel: (v: PingVars) => ({
+        subject: `${v.name} se inscribió${v.channel ? ` (${v.channel})` : ""}`,
+        lines: [`${v.name} llenó sus datos en la página de IPT. Ya está en sus referidos y Danny le va a ayudar.`],
       }),
       addedByDanny: (v: PingVars) => ({
         subject: `Danny agregó a ${v.name}`,
@@ -641,7 +643,6 @@ const en: Messages = {
     address: "Address",
     language: "Language",
     needs: "What they need",
-    referredBy: "Referred by Aníbal",
     addedOn: (d: string) => `Added ${d}`,
     editContact: "Edit contact info",
     call: "Call",
@@ -810,7 +811,6 @@ const en: Messages = {
     needsHint: "For example: coverage for workers, a truck, a home…",
     source: "How did they hear about IPT?",
     chooseOne: "Choose one",
-    referredByAnibal: "Referred by Aníbal",
     sections: {
       person: "The person",
       address: "Address (optional)",
@@ -937,6 +937,12 @@ const en: Messages = {
       signupViaLink: (v: PingVars) => ({
         subject: `${v.name} signed up with your link`,
         lines: [`${v.name} filled in their details with your link. Danny will help them. Thanks for the referral!`],
+      }),
+      signupChannel: (v: PingVars) => ({
+        subject: `${v.name} signed up${v.channel ? ` (${v.channel})` : ""}`,
+        lines: [
+          `${v.name} filled in their details on the IPT page. They're in your referrals now and Danny will help them.`,
+        ],
       }),
       addedByDanny: (v: PingVars) => ({
         subject: `Danny added ${v.name}`,

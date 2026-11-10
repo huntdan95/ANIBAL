@@ -22,7 +22,7 @@ export async function linkCustomerAccount(
   return customerId;
 }
 
-/** Aníbal's account id, for Danny's "Referido por Aníbal" checkbox. */
+/** Aníbal's account id (made if he has never signed in). Every lead is credited to him. */
 export async function getReferrerId(): Promise<string | null> {
   const admin = createAdminClient();
   const { data: staff } = await admin

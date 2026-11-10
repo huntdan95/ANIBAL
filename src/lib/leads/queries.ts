@@ -4,7 +4,7 @@ import { LEAD_COLUMNS, type Lead } from "@/lib/types";
 
 /**
  * Every lead the signed-in person may see. The database decides:
- * Danny gets all of them, Aníbal only the ones he referred.
+ * Danny gets all of them, Aníbal the ones credited to him (which is every lead).
  */
 export async function listVisibleLeads(): Promise<Lead[]> {
   const supabase = await createClient();

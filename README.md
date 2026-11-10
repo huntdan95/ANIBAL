@@ -87,10 +87,13 @@ sent from `onboarding@resend.dev`. That's fine for trying the app yourself, but 
    (That address doesn't need a mailbox. Replies go to `EMAIL_REPLY_TO`, which is danny@go-ipt.com.)
 
 ### Who gets which email
-| When… | Danny | Aníbal (his referrals only) | Customer |
+Every lead counts as Aníbal's, including the ones you add and every public sign-up, so he hears about all of them.
+
+| When… | Danny | Aníbal | Customer |
 |---|---|---|---|
 | Aníbal adds a referral | ✓ | | ✓ welcome + 30-day link |
-| Danny adds a referral | | ✓ if "Referido por Aníbal" | ✓ welcome + 30-day link |
+| Danny adds a referral | | ✓ | ✓ welcome + 30-day link |
+| Someone signs up on a public page (radio, Aníbal's link…) | ✓ | ✓ | ✓ welcome + 30-day link |
 | Danny marks **Contactado** | | ✓ | |
 | Customer sends their info | ✓ | ✓ | |
 | Danny posts a quote | | ✓ | ✓ "Su cotización está lista" + link |
@@ -201,14 +204,16 @@ Share these so people can sign up on their own. Replace `YOUR-SITE` with your we
 | Newsletter | `https://YOUR-SITE/r/boletin` | Boletín |
 | Magazine | `https://YOUR-SITE/r/revista` | Revista |
 | Events | `https://YOUR-SITE/r/evento` | Evento |
-| **Aníbal's own link** | `https://YOUR-SITE/r/anibal` | Presentación de Aníbal, **counted as his referral** |
+| **Aníbal's own link** | `https://YOUR-SITE/r/anibal` | Presentación de Aníbal |
+
+Every sign-up counts as Aníbal's referral, whichever link they used. The channel only tells you where they heard about IPT.
 
 Aníbal doesn't need to remember his link: it's at the top of his referral list, with **WhatsApp**, **Texto**, **Correo**
 and **Copiar enlace** buttons (the message is already written). He doesn't fill in anything: the person enters their own
 name, phone and email, and can also say what they need insured right there (optional). If they do, the lead arrives at
 **Información enviada** ready for a quote. You and Aníbal both get an email either way.
 
-Each person who signs up becomes a **Nuevo** lead tagged with that channel. They get an email with their 30-day link, and you get a "New sign-up" email.
+Each person who signs up becomes a **Nuevo** lead tagged with that channel. They get an email with their 30-day link, and you and Aníbal each get a short email.
 If the same email signs up again while their lead is still open, they just get their link again (no duplicate).
 
 Tip: for print (magazine, flyers at events), turn the link into a QR code with any free QR code maker.

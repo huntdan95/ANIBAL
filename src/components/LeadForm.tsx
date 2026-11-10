@@ -19,13 +19,11 @@ export function LeadForm({
   lang,
   action,
   initial,
-  showReferrerBox,
   cancelHref,
 }: {
   lang: Lang;
   action: (prev: LeadFormState, fd: FormData) => Promise<LeadFormState>;
   initial: Values;
-  showReferrerBox: boolean;
   cancelHref: string;
 }) {
   const t = messages[lang].form;
@@ -61,18 +59,6 @@ export function LeadForm({
         <Field {...f("phone")} label={t.phone} type="tel" inputMode="tel" maxLength={20} />
         <Field {...f("email")} label={t.email} type="email" inputMode="email" maxLength={200} />
         <LanguageChoice label={t.language} value={v.language} />
-        {/* Danny only. Stays in view: it decides whether Aníbal gets emails about this lead. */}
-        {showReferrerBox && (
-          <label className="flex h-12 cursor-pointer items-center gap-3 rounded-xl border border-gold bg-cream-light px-3 text-lg">
-            <input
-              type="checkbox"
-              name="referred_by_anibal"
-              defaultChecked={v.referred_by_anibal === "on"}
-              className="h-5 w-5 accent-navy"
-            />
-            {t.referredByAnibal}
-          </label>
-        )}
       </Section>
 
       <Fold title={t.sections.address} hint={addressPreview ?? t.sections.addressHint}>

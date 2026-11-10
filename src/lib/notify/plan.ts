@@ -1,8 +1,9 @@
 // WHO gets WHICH ping for each event. Pure logic, no sending. See tests/unit/notify.test.ts.
 //
 // The rule: when something happens, the other people involved hear about it.
-// Aníbal only hears about people he referred. The customer only gets emails
-// that need them to do something (or the thank-you note).
+// Every lead is credited to Aníbal, so he hears about all of them (`referred` is only
+// false if his account is missing). The customer only gets emails that need them
+// to do something (or the thank-you note).
 import type { Messages } from "@/i18n/messages";
 import type { Stage } from "@/lib/types";
 
@@ -28,6 +29,8 @@ export type PlanContext = {
   addedBy?: "admin" | "referrer" | null;
   /** lead_added only: they already said what they need insured (public sign-up page) */
   withInfo?: boolean;
+  /** lead_added only: they signed up with Aníbal's own link (/r/anibal), not radio etc. */
+  viaAnibalLink?: boolean;
 };
 
 const toDanny = (template: TemplateKey): PlannedPing => ({ to: "danny", template, button: "viewLead" });
@@ -42,9 +45,9 @@ export function planPings(event: PingEvent, ctx: PlanContext): PlannedPing[] {
         ctx.withInfo ? toCustomer("welcomeInfoSent", "myFile") : toCustomer("welcome", "sendInfo"),
         ...(ctx.addedBy === "referrer" ? [toDanny("newReferral")] : []),
         ...(ctx.addedBy === "admin" ? anibal("addedByDanny") : []),
-        // Public sign-up page: through Aníbal's own link, both Danny and Aníbal hear about it.
-        ...(ctx.addedBy == null && ctx.referred ? [toDanny("newSignupAnibal"), toAnibal("signupViaLink")] : []),
-        ...(ctx.addedBy == null && !ctx.referred ? [toDanny("newSignup")] : []),
+        // Public sign-up page: Danny and Aníbal both hear about it. Aníbal's own link has its own wording.
+        ...(ctx.addedBy == null && ctx.viaAnibalLink ? [toDanny("newSignupAnibal"), ...anibal("signupViaLink")] : []),
+        ...(ctx.addedBy == null && !ctx.viaAnibalLink ? [toDanny("newSignup"), ...anibal("signupChannel")] : []),
       ];
     case "contacted":
       return anibal("contacted");
