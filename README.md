@@ -22,6 +22,10 @@ quote PDFs in private storage · public sign-up pages · Danny's scorecard.
 | [Resend](https://resend.com) | Sends the emails | Free up to 3,000/month |
 | [Vercel](https://vercel.com) | Puts the website online | Free Hobby plan (see note at the end) |
 
+⚠️ **Supabase's free plan pauses a project after 7 days without use.** While it's paused, nobody can sign in and the
+site stops working. To wake it, log in to [supabase.com](https://supabase.com), open the project and click
+**Restore project**. Supabase's Pro plan ($25/month) never pauses.
+
 ---
 
 ## Part 1: Set up Supabase (about 10 minutes)
@@ -85,6 +89,8 @@ sent from `onboarding@resend.dev`. That's fine for trying the app yourself, but 
 5. Once it says **Verified**, set `EMAIL_FROM` to an address at that domain, for example:
    `EMAIL_FROM="Danny Hunt - IPT <danny@iptreferidos.com>"`
    (That address doesn't need a mailbox. Replies go to `EMAIL_REPLY_TO`, which is danny@go-ipt.com.)
+   Then redeploy. While `EMAIL_FROM` is still an `@resend.dev` address, the live site logs a `[config]` warning
+   in Vercel → your project → **Logs** each time it starts.
 
 ### Who gets which email
 Every lead counts as Aníbal's, including the ones you add and every public sign-up, so he hears about all of them.
@@ -152,9 +158,14 @@ real Supabase database, so delete test leads afterwards (Supabase → Table Edit
    | `EMAIL_FROM` | `Danny Hunt - IPT <onboarding@resend.dev>` until your domain is verified, then e.g. `Danny Hunt - IPT <danny@iptreferidos.com>` |
    | `EMAIL_REPLY_TO` | `danny@go-ipt.com` |
 
+   ⚠️ Vercel asks whether each variable is **Config** or **Secret**. The three `NEXT_PUBLIC_…` variables must be
+   **Config**, not Secret. Next.js copies their values into the site while Vercel builds it, and as Secret they
+   don't make it in. If `NEXT_PUBLIC_SITE_URL` is missing, the deploy stops with an error saying so, and the site
+   keeps running the previous version.
+
 4. Click **Deploy** and wait 1–2 minutes. Vercel shows your site's address, something like `https://anibal-xyz.vercel.app`.
 5. Copy that address. In Vercel: **Settings → Environment Variables** → edit `NEXT_PUBLIC_SITE_URL` → paste it
-   (no slash at the end) → **Save**. Then **Deployments** → ⋯ on the newest one → **Redeploy**.
+   (no slash at the end, type **Config**) → **Save**. Then **Deployments** → ⋯ on the newest one → **Redeploy**.
    (Every email link uses this address, so it must be right.)
 6. In Supabase: **Authentication → URL Configuration** → set **Site URL** to the same address → **Save**.
 
@@ -178,8 +189,9 @@ technically calls for Vercel Pro ($20/month). The free plan works the same way i
    tap **Entrar**. You land on the lead list in English. ✅ Login works.
 2. **Example data:** load the 3 EJEMPLO leads (section below) and check the list, the filters, search ("perez"), and the
    **Activity** and **Scorecard** tabs. (Examples don't count on the scorecard.)
-3. **A test customer:** add a referral with a second email of yours (for example huntdanb@icloud.com) and check
-   **Referred by Aníbal**. The customer gets a welcome email ("Danny Hunt de IPT le ayudará…").
+3. **A test customer:** add a referral with a second email of yours. The customer gets a welcome email
+   ("Danny Hunt de IPT le ayudará…"). Don't use the address you get sign-in links at (see
+   "Signing in with a different email" below): the app treats it as you, so it never becomes a customer.
 4. **Be the customer:** open that email in a private/incognito window, tap the button → you see "Hola, …". Fill in
    "Mi información" → **Enviar a Danny**. As Danny you get "… sent their info", and the lead shows **Info sent**.
 5. **Post a quote:** on the lead, upload any PDF with a note → **Post and notify**. The customer gets
@@ -268,7 +280,8 @@ update public.staff set login_email = 'your-other-email@example.com' where email
 ```
 
 (The first statement is the file `supabase/migrations/20261109000400_staff_login_email.sql`.)
-From then on, typing either email on the sign-in page sends the link to the other address. To undo it, run
+From then on, typing either email on the sign-in page sends the link to the other address. That address counts
+as you everywhere in the app: a referral added with it never gets its own customer account. To undo it, run
 `update public.staff set login_email = null where email = 'danny@go-ipt.com';`
 
 ---

@@ -89,7 +89,10 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 ## Gotchas
 - Staff pages have `loading.tsx`, so `redirect()` from `requireRole` arrives inside a streamed 200 response (meta refresh + `NEXT_REDIRECT`), not as a 307. No page data is sent. Don't "fix" this by removing the loading state.
 - Deployed: Vercel (Hobby), imported from GitHub `huntdan95/ANIBAL` `main` → every push to `main` redeploys automatically. Danny signed in on his phone on the live site.
-- Live status: Danny's Supabase project (`hvexxmekxifyvcnrkmiz`) has all migrations loaded, and magic-link sign-in is confirmed working from a local `npm run dev` against it (so `generateLink` + `verifyOtp({ type: "magiclink" })` is fine). Not yet confirmed live: quote PDF upload to Storage, Resend delivery to anyone but Danny (no verified domain yet). Local testing uses no `RESEND_API_KEY`, so emails print in the terminal.
+- Live status: Danny's Supabase project (`hvexxmekxifyvcnrkmiz`) has all migrations loaded, and magic-link sign-in is confirmed working from a local `npm run dev` against it (so `generateLink` + `verifyOtp({ type: "magiclink" })` is fine). Not yet confirmed live: quote PDF upload to Storage, Resend delivery to anyone but Danny (the domain is verified, but delivery to others hasn't been seen yet). Local testing uses no `RESEND_API_KEY`, so emails print in the terminal.
+- `NEXT_PUBLIC_*` values are inlined at build time (server code too). `next.config.ts` fails `next build` without `NEXT_PUBLIC_SITE_URL`, and fails a Vercel production build whose value is localhost. At runtime in production, `env.siteUrl()` throws instead of falling back to localhost. In Vercel, `NEXT_PUBLIC_*` variables must be type "Config", not "Secret".
+- `src/instrumentation.ts` logs a `[config]` warning on every server start in production while `EMAIL_FROM` is an `@resend.dev` address (`emailFromWarning` in `src/lib/env.ts`).
+- Supabase's free plan pauses a project after 7 days without use; the whole app is down until Danny clicks "Restore project".
 - Known small gaps (fine for v1, don't build unless asked): no rate limit on the login-link form; the lead list filters in memory (fine for hundreds of leads).
 
 ## Pings implementation (`src/lib/notify/`)
@@ -109,7 +112,7 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 - IPT brand colors (from the logo, defined in `src/app/globals.css` `@theme`): `navy` #22506B (buttons, headings, links), `steel` #6588A2 (secondary, focus), `gold` #B4AC6F (lines/badges only, too light for text), `cream` #EAE9D1, `paper` page background. Headings use `font-serif`. Logo files: `public/ipt-logo.png`, `public/ipt-shield.png`; app icon `src/app/icon.png`. Emails use the same navy/gold (`src/lib/email/template.ts`).
 - Seed data: 3 fake leads clearly marked "EJEMPLO" (`supabase/seed.sql`; remove with `delete from public.leads where is_example`).
 - Lead list loads all visible leads (RLS-filtered) and filters/searches in memory (`src/lib/leads/filter.ts`, accent-insensitive). Fine for hundreds of leads.
-- New lead flow (`src/app/leads/actions.ts`): insert AS the user (RLS) → `linkCustomerAccount()` creates/links the customer's sign-in account with the admin client. Staff emails are never linked as customers.
+- New lead flow (`src/app/leads/actions.ts`): insert AS the user (RLS) → `linkCustomerAccount()` creates/links the customer's sign-in account with the admin client. Staff are never linked as customers: a lead whose email is a staff `email` or `login_email` (`isStaffAddress` in `src/lib/login.ts`) gets `customer_id = null` and no account is created.
 - `/leads/[id]` is Danny-only: progress bar, stage dropdown (`setStage`), contact info, collapsible edit form. Danny-only details and quotes get added here in step 7. Aníbal's cards are read-only.
 - Staff pages live in the `src/app/(staff)/` route group, whose layout shows the Referidos/Actividad tabs (`StaffNav`).
 - Progress logic is in `src/lib/leads/progress.ts` (`progressSteps`, `reached`) and mirrors `public.stage_rank()`. Stage dates are stamped by DB triggers. Changing a stage never erases dates; moving back hides later steps on the bar.
@@ -129,6 +132,6 @@ Short, plain, in the recipient's language (Spanish default; Danny = English). Re
 
 ## Decisions made with Danny
 - Code lives in GitHub; Danny clones to `C:\Apps\ANIBAL`.
-- No access to go-ipt.com DNS; Danny will buy a separate domain for sending. Until then use Resend's test sender. Reply-To is always danny@go-ipt.com.
+- No access to go-ipt.com DNS, so Danny bought `referidos.us` (GoDaddy, Nov 2026): it's the live site (Vercel) and the verified Resend sending domain. Reply-To is always danny@go-ipt.com.
 - Customer email links work for 30 days (token stored hashed in `public.invites`; each tap issues a fresh session).
 - **Every lead is Aníbal's (Nov 10).** The app is only for his customers: Danny-added leads, radio/newsletter/magazine/event sign-ups and his own link are all credited to him (`getReferrerId()` in `createLead`, `updateLead` for older leads, and `signUp`). `source` still records the channel. Migration `20261110000500_every_lead_anibal.sql` credited the leads already in the database (Danny ran it in the live SQL Editor on Nov 10). RLS is unchanged: a lead with no referrer stays hidden from Aníbal (tested).

@@ -12,3 +12,11 @@ export function staffSignIn(rows: StaffRow[], typed: string): { account: string;
   const row = rows.find((r) => r.login_email && r.login_email === typed) ?? rows.find((r) => r.email === typed);
   return row ? { account: row.email, sendTo: row.login_email || row.email } : null;
 }
+
+/**
+ * True for a staff member's email and for their sign-in address. The sign-in page treats both
+ * as that staff member, so neither may ever become (or be linked as) a customer account.
+ */
+export function isStaffAddress(rows: StaffRow[], email: string): boolean {
+  return staffSignIn(rows, email) !== null;
+}
