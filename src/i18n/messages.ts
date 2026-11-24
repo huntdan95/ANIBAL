@@ -217,6 +217,8 @@ const es = {
     doneSpam: "Si no lo ve, revise la carpeta de correo no deseado.",
     privacy: "Solo usamos sus datos para ayudarle con su seguro.",
     preferCall: "¿Prefiere llamar?",
+    haveAccount: "¿Ya tiene cuenta?",
+    signIn: "Entrar",
     busy: "Hay muchas inscripciones en este momento. Intente en unos minutos o llame a Danny al 615-295-6003.",
     failed: "No se pudo enviar. Intente otra vez o llame a Danny al 615-295-6003.",
     errors: {
@@ -714,6 +716,8 @@ const en: Messages = {
     doneSpam: "If you don't see it, check your spam folder.",
     privacy: "We only use your details to help with your insurance.",
     preferCall: "Rather call?",
+    haveAccount: "Already have an account?",
+    signIn: "Sign in",
     busy: "Lots of sign-ups right now. Please try again in a few minutes or call Danny at 615-295-6003.",
     failed: "Couldn't send. Please try again or call Danny at 615-295-6003.",
     errors: {

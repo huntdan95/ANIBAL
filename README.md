@@ -125,16 +125,17 @@ You need: Part 1 done (your Supabase project with the two database files loaded)
 3. Install the pieces it uses: `npm install`
 4. Make your settings file: `Copy-Item .env.example .env.local`, then `notepad .env.local`. Fill in the three Supabase
    lines (Part 1, step 4). Leave `RESEND_API_KEY` empty and keep `NEXT_PUBLIC_SITE_URL=http://localhost:3000`. Save and close.
-5. Start it: `npm run dev`. When it says **Ready**, open **http://localhost:3000** in your browser.
+5. Start it: `npm run dev`. When it says **Ready**, open **http://localhost:3000/login** in your browser.
+   (Plain `http://localhost:3000` shows Aníbal's public sign-up page, the same as `referidos.us`.)
 6. **Sign in as you:** type danny@go-ipt.com and tap the button. In the PowerShell window, a box starting
    `EMAIL (not sent…)` appears. Copy the link in it (it starts with `http://localhost:3000/auth/confirm`), paste it into
    your browser, and tap **Entrar**.
 7. **Sign in as someone else at the same time:** use a private/incognito window (each window is one person):
-   - **Aníbal:** type anibalperez1000@gmail.com and use the link from PowerShell the same way.
+   - **Aníbal:** at `http://localhost:3000/login`, type anibalperez1000@gmail.com and use the link from PowerShell the same way.
    - **A customer:** as Danny or Aníbal, add a referral with any email (even a made-up one like prueba@example.com).
      Its welcome email, with the customer's link, prints in PowerShell. Open that link in another private window.
 8. Then follow Part 4 below from step 4 (customer sends info → you post a quote → "Quiero seguir adelante" →
-   mark it bound), and try `http://localhost:3000/r/radio` and `http://localhost:3000/r/anibal`.
+   mark it bound), and try `http://localhost:3000` (Aníbal's sign-up page) and `http://localhost:3000/r/radio`.
 
 To stop the app, press **Ctrl+C** in PowerShell. Nothing here sends a real email; everything you add is saved in your
 real Supabase database, so delete test leads afterwards (Supabase → Table Editor → `leads`).
@@ -185,7 +186,7 @@ technically calls for Vercel Pro ($20/month). The free plan works the same way i
 > you signed up to Resend with. Sign up to Resend with **danny@go-ipt.com** so you can test as Danny right away.
 > Aníbal and customers start receiving emails once the domain is verified.
 
-1. **You:** open your site → type `danny@go-ipt.com` → **Enviarme el enlace** → open the email → tap the button →
+1. **You:** open `https://referidos.us/login` → type `danny@go-ipt.com` → **Enviarme el enlace** → open the email → tap the button →
    tap **Entrar**. You land on the lead list in English. ✅ Login works.
 2. **Example data:** load the 3 EJEMPLO leads (section below) and check the list, the filters, search ("perez"), and the
    **Activity** and **Scorecard** tabs. (Examples don't count on the scorecard.)
@@ -197,7 +198,7 @@ technically calls for Vercel Pro ($20/month). The free plan works the same way i
 5. **Post a quote:** on the lead, upload any PDF with a note → **Post and notify**. The customer gets
    "Su cotización está lista". In the customer window, open the PDF and tap **Quiero seguir adelante** → you get an email.
 6. **Bind it:** tap **✓ They bought the policy**. The customer sees "🎉 ¡Su póliza está activa!".
-7. **Aníbal:** once your domain is verified, have Aníbal sign in with anibalperez1000@gmail.com. He should see only his
+7. **Aníbal:** once your domain is verified, have Aníbal sign in at `referidos.us/login` with anibalperez1000@gmail.com. He should see only his
    referrals: no Scorecard tab, no prices, no PDFs.
 8. **Public page:** open `/r/radio` on your phone and sign up with another email.
 
@@ -208,15 +209,21 @@ If anything in this list doesn't behave as described, send a screenshot. Errors 
 
 ## Your public sign-up links (radio, newsletter, magazine, events)
 
-Share these so people can sign up on their own. Replace `YOUR-SITE` with your website address (for example `iptreferidos.com`):
+Share these so people can sign up on their own:
 
 | Where | Link to share | Shows up as |
 |---|---|---|
-| Radio | `https://YOUR-SITE/r/radio` | Radio |
-| Newsletter | `https://YOUR-SITE/r/boletin` | Boletín |
-| Magazine | `https://YOUR-SITE/r/revista` | Revista |
-| Events | `https://YOUR-SITE/r/evento` | Evento |
-| **Aníbal's own link** | `https://YOUR-SITE/r/anibal` | Presentación de Aníbal |
+| **Aníbal's link** | **`https://referidos.us`** (just the domain) | Presentación de Aníbal |
+| Radio | `https://referidos.us/r/radio` | Radio |
+| Newsletter | `https://referidos.us/r/boletin` | Boletín |
+| Magazine | `https://referidos.us/r/revista` | Revista |
+| Events | `https://referidos.us/r/evento` | Evento |
+| Aníbal's old link | `https://referidos.us/r/anibal` | Same page as `referidos.us`. Links already shared keep working |
+
+**The bare domain is Aníbal's sign-up page.** Anyone who opens `referidos.us` without being signed in sees
+"Aníbal le recomendó a Danny Hunt de IPT" and the sign-up form; signed-in people go straight to their own page.
+To sign in, go to **`referidos.us/login`**, or tap **"¿Ya tiene cuenta? Entrar"** at the bottom of the sign-up page.
+(Aníbal's share buttons send `NEXT_PUBLIC_SITE_URL`, so in Vercel it must be `https://referidos.us`.)
 
 Every sign-up counts as Aníbal's referral, whichever link they used. The channel only tells you where they heard about IPT.
 
@@ -287,7 +294,8 @@ as you everywhere in the app: a referral added with it never gets its own custom
 ---
 
 ## How sign-in works
-- **Danny and Aníbal:** go to the site, type your email, and tap the link in the email (it works for 1 hour).
+- **Danny and Aníbal:** go to **`referidos.us/login`** (or tap **"¿Ya tiene cuenta? Entrar"** at the bottom of
+  `referidos.us`, which is Aníbal's sign-up page), type your email, and tap the link in the email (it works for 1 hour).
   The link opens a page with an **Entrar / Sign in** button. Tap it to finish. (That extra tap stops work
   email scanners from using up the link before you do.)
 - **Customers:** their emails from Danny contain a personal link that works for **30 days**. One tap opens

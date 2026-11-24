@@ -16,8 +16,14 @@ export const CHANNELS: Record<string, Source> = {
   anibal: "anibal",
 };
 
-/** The link Aníbal shares (shown on his lead list). */
+/** Aníbal's channel. His old link /r/anibal still works; he now shares the bare domain. */
 export const ANIBAL_LINK = "anibal";
+
+/**
+ * The bare domain "/" shows this sign-up page to signed-out visitors: it's the link Aníbal shares
+ * (referidos.us), so it's the same page as /r/anibal and credits the lead to him.
+ */
+export const ROOT_SIGNUP_CHANNEL = ANIBAL_LINK;
 
 export const SIGNUP_LINKS = ["radio", "boletin", "revista", "evento"] as const;
 
